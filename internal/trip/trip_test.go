@@ -176,3 +176,65 @@ func TestRedisTripStore_ConcurrentJoins(t *testing.T) {
 		t.Errorf("Expected final discount = 3500 Paise (₹35.00), got %d Paise", finalTrip.DiscountPaise)
 	}
 }
+
+func TestJoinTripAtomic_3rdMemberJoin_NullMembersField(t *testing.T) {
+	store, _, cleanup := setupTestTripStore(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	tripID := "trip-3rd-member-test"
+
+	// Create trip with 2 initial members in MemberOrderIDs and null Members array in Redis
+	initialTrip := &Trip{
+		ID:                     tripID,
+		RiderID:                "rider-101",
+		RiderName:              "Rahul Sharma",
+		GeofenceID:             "geofence-aravali",
+		GeofenceName:           "Aravali Heights, Tower B",
+		AssignedOrderCount:     4,
+		MemberOrderIDs:         []string{"ord-mem-1", "ord-mem-2"},
+		Members:                nil, // Explicitly nil (decodes as cjson.null in Redis Lua)
+		BaseDeliveryFeePaise:   3500,
+		CurrentDeliveryFeePaise: 1750,
+		DiscountPaise:          1750,
+		Status:                 TripStatusPooled,
+		CreatedAt:              time.Now(),
+	}
+
+	if err := store.CreateOrUpdateTrip(ctx, initialTrip); err != nil {
+		t.Fatalf("Failed to create initial trip: %v", err)
+	}
+
+	newMember := &TripMember{
+		OrderID:         "ord-web-3",
+		MemberID:        "mem-web-3",
+		DisplayName:     "You (Web User)",
+		FlatLocation:    "Flat 304, Tower B",
+		ItemsSummary:    "Organic Eggs (6-pack), Greek Yogurt",
+		OrderTotalPaise: 22000,
+		AvatarColor:     "#10B981",
+	}
+
+	// 3rd member joins atomically
+	updatedTrip, err := store.JoinTripAtomic(ctx, tripID, "ord-web-3", 3500, newMember)
+	if err != nil {
+		t.Fatalf("EXPECTED SUCCESS: 3rd member join failed with error: %v", err)
+	}
+
+	if len(updatedTrip.MemberOrderIDs) != 3 {
+		t.Errorf("Expected 3 member_order_ids, got %d", len(updatedTrip.MemberOrderIDs))
+	}
+
+	if len(updatedTrip.Members) != 1 {
+		t.Errorf("Expected 1 newly inserted member in Members array, got %d", len(updatedTrip.Members))
+	}
+
+	// 3 members => 100% Fee Waived (0 Paise fee, 3500 Paise discount)
+	if updatedTrip.CurrentDeliveryFeePaise != 0 {
+		t.Errorf("EXPECTED FEE WAIVED (0 Paise), got %d Paise", updatedTrip.CurrentDeliveryFeePaise)
+	}
+
+	if updatedTrip.DiscountPaise != 3500 {
+		t.Errorf("EXPECTED DISCOUNT ₹35.00 (3500 Paise), got %d Paise", updatedTrip.DiscountPaise)
+	}
+}

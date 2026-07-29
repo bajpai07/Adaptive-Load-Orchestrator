@@ -22,17 +22,21 @@ end
 
 local trip = cjson.decode(tripData)
 local exists = false
-for _, existingID in ipairs(trip.member_order_ids) do
-    if existingID == orderID then
-        exists = true
-        break
+if trip.member_order_ids and type(trip.member_order_ids) == "table" then
+    for _, existingID in ipairs(trip.member_order_ids) do
+        if existingID == orderID then
+            exists = true
+            break
+        end
     end
+else
+    trip.member_order_ids = {}
 end
 
 if not exists then
     table.insert(trip.member_order_ids, orderID)
     if memberJSON and #memberJSON > 0 then
-        if not trip.members then
+        if trip.members == nil or type(trip.members) ~= "table" then
             trip.members = {}
         end
         table.insert(trip.members, cjson.decode(memberJSON))
