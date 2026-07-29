@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Load Orchestrator — Live Ops Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: #151c2e;
+      --border-color: #232f48;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ws-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--accent-red);
+    }
+    .dot.connected { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Decision Stream */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-nudge { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .badge-rejected { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-executed { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid #8b5cf6; }
+    .badge-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .badge-noaction { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+
+    /* Summary Counters */
+    .counter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .counter-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .counter-value { font-size: 24px; font-weight: 700; margin-top: 4px; color: var(--accent-cyan); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th { color: var(--text-muted); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Adaptive Load Orchestrator — Operations Console</h1>
+      <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Live Demand-Shaping & Load Orchestration Event Stream</p>
+    </div>
+    <div class="ws-status">
+      <div id="wsDot" class="dot"></div>
+      <span id="wsText">Disconnected</span>
+    </div>
+  </header>
+
+  <div class="counter-grid">
+    <div class="counter-card">
+      <div style="font-size: 12px; color: var(--text-muted);">Batching Nudges</div>
+      <div id="cntNudge" class="counter-value" style="color: var(--accent-green);">0</div>
+    </div>
+    <div class="counter-card">
+      <div style="font-size: 12px; color: var(--text-muted);">Cost Gate Blocks</div>
+      <div id="cntRejected" class="counter-value" style="color: var(--accent-amber);">0</div>
+    </div>
+    <div class="counter-card">
+      <div style="font-size: 12px; color: var(--text-muted);">Re-Routes Executed</div>
+      <div id="cntExecuted" class="counter-value" style="color: var(--accent-purple);">0</div>
+    </div>
+    <div class="counter-card">
+      <div style="font-size: 12px; color: var(--text-muted);">Orders Consolidated</div>
+      <div id="cntMerged" class="counter-value" style="color: var(--accent-cyan);">0</div>
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <div class="card">
+      <div class="card-header">Live Unified Decision Timeline Stream</div>
+      <div id="timeline" class="timeline">
+        <div style="color: var(--text-muted); text-align: center; padding: 40px;">Connecting to Live Simulation WS Stream...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header">Three-Way Benchmark Overview</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Engine Mode</th>
+              <th>Re-Routes</th>
+              <th>Margin Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>(a) Naive Phase 1</td>
+              <td>147</td>
+              <td style="color: var(--accent-red);">High Margin Loss</td>
+            </tr>
+            <tr>
+              <td>(b) Cost-Gated Phase 3</td>
+              <td>0 - 2</td>
+              <td style="color: var(--accent-amber);">Zero Margin Waste</td>
+            </tr>
+            <tr style="font-weight: 600; background: rgba(6, 182, 212, 0.1);">
+              <td>(c) Full Phase 4</td>
+              <td>0 (Nudged)</td>
+              <td style="color: var(--accent-green);">Consolidated & Saved</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let nudgeCount = 0;
+    let rejectedCount = 0;
+    let executedCount = 0;
+    let mergedCount = 0;
+
+    function connectWS() {
+      const ws = new WebSocket('ws://' + window.location.host + '/ws/ops');
+      const wsDot = document.getElementById('wsDot');
+      const wsText = document.getElementById('wsText');
+      const timeline = document.getElementById('timeline');
+
+      ws.onopen = () => {
+        wsDot.classList.add('connected');
+        wsText.innerText = 'Live Engine Connected';
+        timeline.innerHTML = '';
+      };
+
+      ws.onclose = () => {
+        wsDot.classList.remove('connected');
+        wsText.innerText = 'Disconnected — Retrying...';
+        setTimeout(connectWS, 2000);
+      };
+
+      ws.onmessage = (evt) => {
+        const data = JSON.parse(evt.data);
+        addLogItem(data);
+      };
+    }
+
+    function addLogItem(data) {
+      const timeline = document.getElementById('timeline');
+      const item = document.createElement('div');
+      item.className = 'log-item';
+
+      let badgeClass = 'badge-noaction';
+      if (data.outcome === 'BATCHING_NUDGE_ISSUED') {
+        badgeClass = 'badge-nudge';
+        nudgeCount++;
+        if (data.consolidated_count) mergedCount += data.consolidated_count;
+      } else if (data.outcome === 'RE_ROUTE_REJECTED_ON_COST') {
+        badgeClass = 'badge-rejected';
+        rejectedCount++;
+      } else if (data.outcome === 'RE_ROUTE_EXECUTED') {
+        badgeClass = 'badge-executed';
+        executedCount++;
+      } else if (data.outcome === 'RE_ROUTE_FAILED_NO_STOCK') {
+        badgeClass = 'badge-failed';
+      }
+
+      document.getElementById('cntNudge').innerText = nudgeCount;
+      document.getElementById('cntRejected').innerText = rejectedCount;
+      document.getElementById('cntExecuted').innerText = executedCount;
+      document.getElementById('cntMerged').innerText = mergedCount;
+
+      const simTimeSec = (data.sim_time_ns / 1e9).toFixed(1);
+      let details = '';
+
+      if (data.outcome === 'BATCHING_NUDGE_ISSUED') {
+        details = `Store: ${data.source_store_id} | GroupCart: ${data.nudge_cart_id} | Merged ${data.consolidated_count} orders into 1 pass`;
+      } else if (data.outcome === 'RE_ROUTE_REJECTED_ON_COST') {
+        details = `Store: ${data.source_store_id} -> ${data.target_store_id} | Cost: ₹${(data.reroute_cost_paise/100).toFixed(2)} >= SLA Penalty: ₹${(data.sla_penalty_paise/100).toFixed(2)} (Delay: ${data.predicted_delay_min.toFixed(2)} min)`;
+      } else if (data.outcome === 'RE_ROUTE_EXECUTED') {
+        details = `Store: ${data.source_store_id} -> ${data.target_store_id} | Cost: ₹${(data.reroute_cost_paise/100).toFixed(2)} < SLA Penalty: ₹${(data.sla_penalty_paise/100).toFixed(2)} | Order: ${data.order_id}`;
+      } else {
+        details = `Store: ${data.source_store_id}`;
+      }
+
+      item.innerHTML = `<span style="color: var(--text-muted);">[+${simTimeSec}s]</span> <span class="badge ${badgeClass}">${data.outcome}</span> ${details}`;
+      timeline.prepend(item);
+
+      if (timeline.children.length > 50) {
+        timeline.removeChild(timeline.lastChild);
+      }
+    }
+
+    window.onload = connectWS;
+  </script>
+</body>
+</html>

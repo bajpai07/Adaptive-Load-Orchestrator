@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zepto Shared Cart — Real-Time Group Shopping</title>
+    <!-- Google Fonts for Zepto Brand Aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --purple-dark: #3B0B67;
+            --purple-main: #5B1793;
+            --purple-bright: #7C1FC4;
+            --purple-light: #F4ECFC;
+            --lime-accent: #C6FF3B;
+            --lime-glow: rgba(198, 255, 59, 0.4);
+            --bg-cream: #FAF7F2;
+            --card-bg: #FFFFFF;
+            --text-ink: #1C1023;
+            --text-muted: #6C5C77;
+            --border-light: #EFE9F4;
+            --red-alert: #FF4D4D;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-cream);
+            color: var(--text-ink);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Brand Navigation Bar (Edge-to-Edge) */
+        .navbar {
+            background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple-main) 50%, var(--purple-bright) 100%);
+            color: #FFFFFF;
+            padding: 14px 20px;
+            box-shadow: 0 4px 20px rgba(59, 11, 103, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zepto-logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .speed-badge {
+            background: var(--lime-accent);
+            color: var(--text-ink);
+            font-weight: 800;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .geofence-tag {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .connection-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 5px 12px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red-alert);
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background: var(--lime-accent);
+            box-shadow: 0 0 8px var(--lime-accent);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Main Responsive Container */
+        .app-container {
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px 16px;
+            flex-grow: 1;
+        }
+
+        /* Fluid Desktop 2-Column Grid vs Mobile 1-Column Layout */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 900px) {
+            .layout-grid {
+                grid-template-columns: 360px 1fr;
+                gap: 28px;
+                align-items: start;
+            }
+        }
+
+        /* Info & System Overview Card (Visible on Desktop & Tablet) */
+        .info-panel {
+            background: linear-gradient(145deg, #FFFFFF 0%, #FAF5FF 100%);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(91, 23, 147, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-panel h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            margin: 0;
+            color: var(--purple-main);
+        }
+
+        .info-panel p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .feature-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .feature-chip {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        /* Main Shared Cart Column */
+        .cart-column {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* Reward Section Card */
+        .reward-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 20px 24px;
+            box-shadow: 0 10px 30px rgba(91, 23, 147, 0.05);
+            border: 1px solid var(--border-light);
+        }
+
+        .reward-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .reward-title-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reward-icon {
+            font-size: 1.3rem;
+            background: var(--purple-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reward-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-ink);
+        }
+
+        .unlock-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 99px;
+            background: #EAE6EF;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .unlock-badge.unlocked {
+            background: var(--lime-accent);
+            color: var(--text-ink);
+            box-shadow: 0 0 14px var(--lime-glow);
+            transform: scale(1.05);
+        }
+
+        .progress-bar-container {
+            background: #EFE9F4;
+            height: 16px;
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 12px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--purple-main) 0%, var(--lime-accent) 100%);
+            border-radius: 99px;
+            transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .reward-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .cart-total-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--purple-main);
+        }
+
+        /* Live Items Section */
+        .items-section {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 20px 24px;
+            box-shadow: 0 10px 30px rgba(91, 23, 147, 0.05);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            min-height: 280px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-ink);
+        }
+
+        .item-count-pill {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 99px;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .item-card {
+            background: #FAF8FC;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .item-card.animate-entrance {
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            background: #F4FFD6;
+            border-color: var(--lime-accent);
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(-12px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .item-icon-box {
+            width: 40px;
+            height: 40px;
+            background: #FFFFFF;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-ink);
+            margin-bottom: 2px;
+        }
+
+        .item-member {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .member-tag {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .member-tag.me {
+            background: rgba(198, 255, 59, 0.3);
+            color: #436B00;
+        }
+
+        .item-price {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: var(--text-ink);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+            opacity: 0.6;
+        }
+
+        /* Action Bar / CTA */
+        .action-container {
+            margin-top: 8px;
+        }
+
+        .btn-cta {
+            width: 100%;
+            background: var(--lime-accent);
+            color: var(--text-ink);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px var(--lime-glow);
+            transition: all 0.2s ease;
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(198, 255, 59, 0.5);
+        }
+
+        .btn-cta:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile Viewport Sticky Footer Bar adjustment */
+        @media (max-width: 600px) {
+            .geofence-tag {
+                display: none;
+            }
+            .info-panel {
+                display: none;
+            }
+            .app-container {
+                padding-bottom: 90px;
+            }
+            .action-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 14px 16px;
+                background: #FFFFFF;
+                border-top: 1px solid var(--border-light);
+                box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
+                z-index: 99;
+                margin-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Edge-to-Edge Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <div class="brand-logo-group">
+                <div class="zepto-logo-badge">
+                    <span>zepto</span>
+                    <span class="speed-badge">10 MIN</span>
+                </div>
+                <span class="geofence-tag">📍 Aravali Heights Dark Store Geofence</span>
+            </div>
+            <div class="connection-pill">
+                <span id="ws-dot" class="status-dot"></span>
+                <span id="ws-status">Disconnected</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Responsive Body Container -->
+    <main class="app-container">
+        <div class="layout-grid">
+            
+            <!-- Left Panel: Zepto Group Cart Explanation & Live Core Stats (Desktop/Tablet) -->
+            <aside class="info-panel">
+                <h2>Group Shared Shopping</h2>
+                <p>Collaborative multi-member carts consolidated automatically by dark-store geofences to unlock rewards and reduce dispatch overhead.</p>
+                <div class="feature-badge-list">
+                    <span class="feature-chip">⚡ Real-Time WebSockets</span>
+                    <span class="feature-chip">🔒 Redis Atomic Lock</span>
+                    <span class="feature-chip">🎁 Free Delivery Reward</span>
+                    <span class="feature-chip">🏬 Order Consolidation</span>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Active Shared Cart & Reward Progress -->
+            <section class="cart-column">
+                
+                <!-- Reward Unlock Progress Card -->
+                <div class="reward-card">
+                    <div class="reward-header">
+                        <div class="reward-title-box">
+                            <div class="reward-icon">🎁</div>
+                            <div class="reward-title">Group Delivery Reward</div>
+                        </div>
+                        <span id="unlock-badge" class="unlock-badge">LOCKED</span>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+
+                    <div class="reward-meta">
+                        <span>Target: <strong>₹200.00</strong></span>
+                        <span>Current: <span id="cart-total" class="cart-total-amount">₹0.00</span></span>
+                    </div>
+                </div>
+
+                <!-- Live Shared Items Section -->
+                <div class="items-section">
+                    <div class="section-header">
+                        <div class="section-title">Live Shared Items</div>
+                        <span id="item-count" class="item-count-pill">0 ITEMS</span>
+                    </div>
+
+                    <ul id="item-list" class="item-list">
+                        <div class="empty-state">
+                            <div class="empty-icon">🛒</div>
+                            <p style="margin:0 0 4px 0; font-weight:600;">Shared cart is empty</p>
+                            <small>Add items to unlock group rewards!</small>
+                        </div>
+                    </ul>
+                </div>
+
+                <!-- Simulate Add Item Action Button -->
+                <div class="action-container">
+                    <button id="add-item-btn" class="btn-cta" onclick="addItem()">
+                        <span>⚡ Simulate Add Item</span>
+                        <span style="opacity: 0.85;">(+₹60.00)</span>
+                    </button>
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const geofenceID = "geofence-aravali";
+        const memberID = "mem-ui-" + Math.floor(Math.random() * 1000);
+        let cartID = "";
+        let prevItemCount = 0;
+
+        async function init() {
+            try {
+                const resp = await fetch("/api/carts/join", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        geofence_id: geofenceID,
+                        member_id: memberID,
+                        display_name: "Web User",
+                        lat: 28.6315,
+                        lng: 77.2167,
+                        radius_meters: 500,
+                        unlock_threshold_paise: 20000,
+                        ttl_seconds: 1800
+                    })
+                });
+                if (!resp.ok) {
+                    console.error(`Cart join failed: HTTP ${resp.status} ${resp.statusText}. Ensure server is running: go run ./cmd/sim/main.go --port=9999`);
+                    return;
+                }
+                const cart = await resp.json();
+                cartID = cart.id;
+                updateUI(cart);
+                connectWS(cart.id);
+            } catch (e) {
+                console.error("Cart join error:", e);
+            }
+        }
+
+        function connectWS(cid) {
+            const wsScheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const ws = new WebSocket(`${wsScheme}//${window.location.host}/ws/cart?cart_id=${cid}&member_id=${memberID}`);
+
+            ws.onopen = () => {
+                document.getElementById("ws-dot").classList.add("connected");
+                document.getElementById("ws-status").innerText = "Live Connected";
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === "CART_UPDATED" || data.type === "CART_UNLOCKED") {
+                    fetchCart();
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById("ws-dot").classList.remove("connected");
+                document.getElementById("ws-status").innerText = "Disconnected";
+                setTimeout(() => connectWS(cid), 2000);
+            };
+        }
+
+        async function fetchCart() {
+            if (!cartID) return;
+            try {
+                const resp = await fetch(`/api/carts/join`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        geofence_id: geofenceID,
+                        member_id: memberID,
+                        display_name: "Web User"
+                    })
+                });
+                if (!resp.ok) return;
+                const cart = await resp.json();
+                updateUI(cart);
+            } catch (e) {
+                console.error("Cart fetch error:", e);
+            }
+        }
+
+        async function addItem() {
+            if (!cartID) return;
+            const btn = document.getElementById("add-item-btn");
+            btn.style.transform = "scale(0.96)";
+            setTimeout(() => btn.style.transform = "none", 150);
+
+            try {
+                await fetch("/api/carts/item", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cart_id: cartID,
+                        sku: "SKU-PROMO",
+                        name: "Organic Avocados (2x)",
+                        price_paise: 6000,
+                        added_by_member_id: memberID
+                    })
+                });
+            } catch (e) {
+                console.error("Add item error:", e);
+            }
+        }
+
+        function updateUI(cart) {
+            const totalRupees = (cart.total_paise / 100).toFixed(2);
+            document.getElementById("cart-total").innerText = `₹${totalRupees}`;
+            
+            const pct = Math.min(100, (cart.total_paise / cart.unlock_threshold_paise) * 100);
+            document.getElementById("progress-bar").style.width = `${pct}%`;
+
+            const badge = document.getElementById("unlock-badge");
+            if (cart.unlocked) {
+                badge.innerText = "UNLOCKED! ⚡";
+                badge.classList.add("unlocked");
+            } else {
+                badge.innerText = "LOCKED";
+                badge.classList.remove("unlocked");
+            }
+
+            const countPill = document.getElementById("item-count");
+            const items = cart.items || [];
+            countPill.innerText = `${items.length} ITEM${items.length === 1 ? '' : 'S'}`;
+
+            const list = document.getElementById("item-list");
+            if (items.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🛒</div>
+                        <p style="margin:0 0 4px 0; font-weight:600;">Shared cart is empty</p>
+                        <small>Add items to unlock group rewards!</small>
+                    </div>`;
+                prevItemCount = 0;
+                return;
+            }
+
+            const isNewItemAdded = items.length > prevItemCount && prevItemCount > 0;
+            prevItemCount = items.length;
+
+            list.innerHTML = items.map((item, idx) => {
+                const isLatest = isNewItemAdded && idx === items.length - 1;
+                const animateClass = isLatest ? "animate-entrance" : "";
+                const isMe = item.added_by_member_id === memberID;
+                const memberTag = isMe ? `<span class="member-tag me">You</span>` : `<span class="member-tag">${item.added_by_member_id}</span>`;
+                
+                return `
+                    <li class="item-card ${animateClass}">
+                        <div class="item-icon-box">🥑</div>
+                        <div class="item-details">
+                            <div class="item-title">${item.name}</div>
+                            <div class="item-member">Added by ${memberTag}</div>
+                        </div>
+                        <div class="item-price">₹${(item.price_paise / 100).toFixed(2)}</div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
