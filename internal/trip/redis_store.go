@@ -21,27 +21,53 @@ if not tripData then
 end
 
 local trip = cjson.decode(tripData)
+if trip.member_order_ids == nil or type(trip.member_order_ids) ~= "table" then
+    trip.member_order_ids = {}
+end
+if trip.members == nil or type(trip.members) ~= "table" then
+    trip.members = {}
+end
+
+local newMember = nil
+local targetMemberID = nil
+if memberJSON and #memberJSON > 0 then
+    newMember = cjson.decode(memberJSON)
+    if newMember and newMember.member_id then
+        targetMemberID = newMember.member_id
+    end
+end
+
 local exists = false
-if trip.member_order_ids and type(trip.member_order_ids) == "table" then
-    for _, existingID in ipairs(trip.member_order_ids) do
-        if existingID == orderID then
+
+-- Idempotency check 1: Check if orderID already exists in member_order_ids
+for _, existingID in ipairs(trip.member_order_ids) do
+    if existingID == orderID then
+        exists = true
+        break
+    end
+end
+
+-- Idempotency check 2: Check if member_id already exists in members array
+if not exists and targetMemberID then
+    for _, m in ipairs(trip.members) do
+        if m.member_id and m.member_id == targetMemberID then
             exists = true
             break
         end
     end
-else
-    trip.member_order_ids = {}
 end
 
 if not exists then
     table.insert(trip.member_order_ids, orderID)
-    if memberJSON and #memberJSON > 0 then
-        if trip.members == nil or type(trip.members) ~= "table" then
-            trip.members = {}
-        end
-        table.insert(trip.members, cjson.decode(memberJSON))
+    if newMember then
+        table.insert(trip.members, newMember)
     end
-    local count = #trip.member_order_ids
+    
+    local count = #trip.members
+    if count < #trip.member_order_ids then
+        count = #trip.member_order_ids
+    end
+    
     local fee = baseFeePaise
     local discount = 0
     if count == 2 then
@@ -51,6 +77,7 @@ if not exists then
         fee = 0
         discount = baseFeePaise
     end
+    
     trip.current_delivery_fee_paise = fee
     trip.discount_paise = discount
     trip.status = "POOLED"

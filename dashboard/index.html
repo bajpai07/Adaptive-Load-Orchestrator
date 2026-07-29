@@ -823,15 +823,18 @@
             if (hasJoinedTrip) return;
             hasJoinedTrip = true;
 
+            const stableOrderID = "ord-web-304";
+            const stableMemberID = "mem-web-304";
+
             try {
                 const resp = await fetch("/api/trips/join", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         trip_id: "trip-rider-1",
-                        order_id: "ord-web-" + Math.floor(Math.random() * 1000),
-                        member_id: memberID,
-                        display_name: "You (Web User)",
+                        order_id: stableOrderID,
+                        member_id: stableMemberID,
+                        display_name: "Vikram Kumar",
                         flat_location: "Flat 304, Tower B",
                         items_summary: "Organic Eggs (6-pack), Greek Yogurt",
                         order_total_paise: 22000,
@@ -845,6 +848,7 @@
                 }
             } catch (e) {
                 console.error("Join trip error:", e);
+                hasJoinedTrip = false;
             }
         }
 

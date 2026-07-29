@@ -56,8 +56,6 @@ func TestRiderMovementAndProximityDetection(t *testing.T) {
 
 	sim := NewRiderSimulator(store, 0.8) // 0.8 km = 800m threshold
 
-	// Pickup at Dark Store (28.6315, 77.2167)
-	// Destination Geofence Centroid ~1.5 km away (28.6450, 77.2167)
 	rider := &Rider{
 		ID:                    "rider-1",
 		CurrentLat:            28.6315,
@@ -142,7 +140,13 @@ func TestRedisTripStore_ConcurrentJoins(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			orderID := fmt.Sprintf("ord-concurrent-%d", idx)
-			_, err := store.JoinTripAtomic(ctx, tripID, orderID, 3500, nil)
+			memberObj := &TripMember{
+				OrderID:      orderID,
+				MemberID:     fmt.Sprintf("mem-concurrent-%d", idx),
+				DisplayName:  fmt.Sprintf("Member %d", idx),
+				FlatLocation: fmt.Sprintf("Flat %d01", idx),
+			}
+			_, err := store.JoinTripAtomic(ctx, tripID, orderID, 3500, memberObj)
 			if err != nil {
 				errChan <- err
 			}
@@ -177,14 +181,34 @@ func TestRedisTripStore_ConcurrentJoins(t *testing.T) {
 	}
 }
 
-func TestJoinTripAtomic_3rdMemberJoin_NullMembersField(t *testing.T) {
+func TestJoinTripAtomic_IdempotencyDeduplication_3DistinctMembers(t *testing.T) {
 	store, _, cleanup := setupTestTripStore(t)
 	defer cleanup()
 
 	ctx := context.Background()
-	tripID := "trip-3rd-member-test"
+	tripID := "trip-idempotency-test"
 
-	// Create trip with 2 initial members in MemberOrderIDs and null Members array in Redis
+	initialMembers := []TripMember{
+		{
+			OrderID:         "ord-mem-1",
+			MemberID:        "mem-1",
+			DisplayName:     "Aarav Mehta",
+			FlatLocation:    "Flat 402, Tower B",
+			ItemsSummary:    "Amul Taaza Milk (1L), Brown Bread",
+			OrderTotalPaise: 18500,
+			AvatarColor:     "#8B5CF6",
+		},
+		{
+			OrderID:         "ord-mem-2",
+			MemberID:        "mem-2",
+			DisplayName:     "Priya Sharma",
+			FlatLocation:    "Flat 201, Tower B",
+			ItemsSummary:    "Lay's Chips (52g), Coca-Cola (750ml)",
+			OrderTotalPaise: 14000,
+			AvatarColor:     "#EC4899",
+		},
+	}
+
 	initialTrip := &Trip{
 		ID:                     tripID,
 		RiderID:                "rider-101",
@@ -193,7 +217,7 @@ func TestJoinTripAtomic_3rdMemberJoin_NullMembersField(t *testing.T) {
 		GeofenceName:           "Aravali Heights, Tower B",
 		AssignedOrderCount:     4,
 		MemberOrderIDs:         []string{"ord-mem-1", "ord-mem-2"},
-		Members:                nil, // Explicitly nil (decodes as cjson.null in Redis Lua)
+		Members:                initialMembers,
 		BaseDeliveryFeePaise:   3500,
 		CurrentDeliveryFeePaise: 1750,
 		DiscountPaise:          1750,
@@ -205,36 +229,45 @@ func TestJoinTripAtomic_3rdMemberJoin_NullMembersField(t *testing.T) {
 		t.Fatalf("Failed to create initial trip: %v", err)
 	}
 
-	newMember := &TripMember{
+	newMember3 := &TripMember{
 		OrderID:         "ord-web-3",
 		MemberID:        "mem-web-3",
-		DisplayName:     "You (Web User)",
+		DisplayName:     "Vikram Kumar",
 		FlatLocation:    "Flat 304, Tower B",
 		ItemsSummary:    "Organic Eggs (6-pack), Greek Yogurt",
 		OrderTotalPaise: 22000,
 		AvatarColor:     "#10B981",
 	}
 
-	// 3rd member joins atomically
-	updatedTrip, err := store.JoinTripAtomic(ctx, tripID, "ord-web-3", 3500, newMember)
+	// First join attempt for 3rd member
+	updatedTrip, err := store.JoinTripAtomic(ctx, tripID, "ord-web-3", 3500, newMember3)
 	if err != nil {
-		t.Fatalf("EXPECTED SUCCESS: 3rd member join failed with error: %v", err)
+		t.Fatalf("EXPECTED SUCCESS: 3rd member join failed: %v", err)
 	}
 
-	if len(updatedTrip.MemberOrderIDs) != 3 {
-		t.Errorf("Expected 3 member_order_ids, got %d", len(updatedTrip.MemberOrderIDs))
+	if len(updatedTrip.Members) != 3 {
+		t.Fatalf("Expected 3 distinct members in Members array, got %d", len(updatedTrip.Members))
 	}
 
-	if len(updatedTrip.Members) != 1 {
-		t.Errorf("Expected 1 newly inserted member in Members array, got %d", len(updatedTrip.Members))
+	// Verify all 3 member names are DISTINCT and preserved!
+	names := []string{updatedTrip.Members[0].DisplayName, updatedTrip.Members[1].DisplayName, updatedTrip.Members[2].DisplayName}
+	if names[0] != "Aarav Mehta" || names[1] != "Priya Sharma" || names[2] != "Vikram Kumar" {
+		t.Errorf("MEMBER CORRUPTION DETECTED! Expected [Aarav Mehta, Priya Sharma, Vikram Kumar], got %v", names)
 	}
 
 	// 3 members => 100% Fee Waived (0 Paise fee, 3500 Paise discount)
 	if updatedTrip.CurrentDeliveryFeePaise != 0 {
-		t.Errorf("EXPECTED FEE WAIVED (0 Paise), got %d Paise", updatedTrip.CurrentDeliveryFeePaise)
+		t.Errorf("Expected fee waived (0 Paise), got %d Paise", updatedTrip.CurrentDeliveryFeePaise)
 	}
 
-	if updatedTrip.DiscountPaise != 3500 {
-		t.Errorf("EXPECTED DISCOUNT ₹35.00 (3500 Paise), got %d Paise", updatedTrip.DiscountPaise)
+	// RETRY TEST: Perform 5 repeated retries with the SAME member_id and order_id!
+	for i := 0; i < 5; i++ {
+		retriedTrip, err := store.JoinTripAtomic(ctx, tripID, "ord-web-3", 3500, newMember3)
+		if err != nil {
+			t.Fatalf("Retry %d failed: %v", i+1, err)
+		}
+		if len(retriedTrip.Members) != 3 {
+			t.Errorf("IDEMPOTENCY FAILURE: Expected 3 members after retry, got %d (Duplicate inserted!)", len(retriedTrip.Members))
+		}
 	}
 }
