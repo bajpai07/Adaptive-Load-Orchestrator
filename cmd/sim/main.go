@@ -17,6 +17,7 @@ import (
 	"adaptive-load-orchestrator/internal/fulfillment"
 	"adaptive-load-orchestrator/internal/groupcart"
 	"adaptive-load-orchestrator/internal/simulation"
+	"adaptive-load-orchestrator/internal/trip"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gorilla/websocket"
@@ -66,6 +67,20 @@ func (s *OpsServer) HandleWS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *OpsServer) BroadcastEvent(ev *fulfillment.UnifiedDecisionEvent) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, err := json.Marshal(ev)
+	if err != nil {
+		return
+	}
+
+	for conn := range s.clients {
+		_ = conn.WriteMessage(websocket.TextMessage, data)
+	}
+}
+
+func (s *OpsServer) BroadcastTripEvent(ev *trip.TripEvent) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -146,7 +161,7 @@ func main() {
 	realDuration := time.Duration(float64(simDuration) / timeScale)
 
 	log.Printf("=========================================================")
-	log.Printf("   ADAPTIVE LOAD ORCHESTRATOR — PHASE 4 SIMULATION")
+	log.Printf("   ADAPTIVE LOAD ORCHESTRATOR — PHASE 5 SIMULATION")
 	log.Printf("=========================================================")
 	log.Printf("Engine Mode         : %s", engineMode)
 	log.Printf("Simulated Duration  : %v (Real execution time: %v)", simDuration, realDuration)
@@ -195,16 +210,80 @@ func main() {
 
 	cartStore := groupcart.NewRedisCartStore(rdb)
 	resStore := fulfillment.NewStockReservationStore(rdb)
+	tripStore := trip.NewRedisTripStore(rdb)
 
 	// Start Ops WebSocket & Group Cart API Server (runs indefinitely)
 	opsServer := NewOpsServer()
 	groupCartServer := groupcart.NewServer(cartStore)
+
+	// Subscribe to Redis trip_events and broadcast via WebSocket
+	go func() {
+		ch := tripStore.SubscribeTripEvents(context.Background())
+		for ev := range ch {
+			opsServer.BroadcastTripEvent(ev)
+		}
+	}()
 
 	go func() {
 		http.HandleFunc("/ws/ops", opsServer.HandleWS)
 		http.HandleFunc("/api/carts/join", groupCartServer.HandleJoinCart)
 		http.HandleFunc("/api/carts/item", groupCartServer.HandleAddItem)
 		http.HandleFunc("/ws/cart", groupCartServer.HandleWebSocket)
+
+		// Phase 5 Rider Trip Endpoints
+		http.HandleFunc("/api/trips/join", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			var req struct {
+				TripID  string `json:"trip_id"`
+				OrderID string `json:"order_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if req.TripID == "" {
+				req.TripID = "trip-rider-1"
+			}
+			if req.OrderID == "" {
+				req.OrderID = fmt.Sprintf("ord-web-%d", time.Now().UnixNano()%10000)
+			}
+
+			t, err := tripStore.JoinTripAtomic(r.Context(), req.TripID, req.OrderID, 3500)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(t)
+		})
+
+		http.HandleFunc("/api/trips/active", func(w http.ResponseWriter, r *http.Request) {
+			geofenceID := r.URL.Query().Get("geofence_id")
+			if geofenceID == "" {
+				geofenceID = "geofence-aravali"
+			}
+			t, err := tripStore.GetActiveTripForGeofence(r.Context(), geofenceID)
+			if err != nil || t == nil {
+				t = &trip.Trip{
+					ID:                     "trip-rider-1",
+					RiderID:                "rider-1",
+					GeofenceID:             geofenceID,
+					MemberOrderIDs:         []string{"ord-host"},
+					BaseDeliveryFeePaise:   3500,
+					CurrentDeliveryFeePaise: 3500,
+					DiscountPaise:          0,
+					ETASeconds:             360,
+					Status:                 trip.TripStatusAvailable,
+					CreatedAt:              time.Now(),
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(t)
+		})
+
 		http.Handle("/", http.FileServer(http.Dir("./dashboard")))
 		log.Printf("HTTP Server listening continuously on :%d ...", port)
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
@@ -258,6 +337,24 @@ func main() {
 			_ = rdb.Set(ctxSim, fmt.Sprintf("cart:%s", cartID), data, 0).Err()
 			_ = rdb.Set(ctxSim, fmt.Sprintf("geofence_cart:%s", geofenceID), cartID, 0).Err()
 		}
+
+		// Initialize Phase 5 Rider Simulator with 0.8 km (800m) proximity threshold
+		riderSim := trip.NewRiderSimulator(tripStore, 0.8)
+
+		// Register active rider heading toward Store-1 geofence (starts 1.5 km away)
+		riderSim.RegisterRider(&trip.Rider{
+			ID:                    "rider-1",
+			CurrentLat:            baseLat - 0.0135, // ~1.5 km away
+			CurrentLng:            baseLng,
+			PickupLat:             baseLat - 0.0135,
+			PickupLng:             baseLng,
+			DestinationGeofenceID: "geofence-aravali",
+			DestinationLat:        baseLat,
+			DestinationLng:        baseLng,
+			AssignedOrderIDs:      []string{"ord-primary-rider"},
+			Status:                trip.RiderStatusEnRoute,
+			SpeedKmH:              30.0, // 30 km/h
+		})
 
 		rawStores := make([]*fulfillment.Store, len(stores))
 		for i, sw := range stores {
@@ -364,6 +461,27 @@ func main() {
 			sw.store.Start(ctxSim)
 		}
 		monitor.Start(ctxSim)
+
+		// Rider movement ticking background loop
+		go func() {
+			ticker := time.NewTicker(200 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctxSim.Done():
+					return
+				case <-ticker.C:
+					// Advance rider position by 0.2s * timeScale
+					deltaSimSec := 0.2 * timeScale
+					events, _ := riderSim.Tick(ctxSim, deltaSimSec)
+					for _, ev := range events {
+						opsServer.BroadcastTripEvent(ev)
+						log.Printf("[RIDER TRIP] SimTime: Proximity Triggered | Rider: %s | Trip: %s | ETA: %.1fs | Fee: ₹%.2f (Discount: ₹%.2f)",
+							ev.RiderID, ev.TripID, ev.ETASeconds, float64(ev.CurrentDeliveryFeePaise)/100.0, float64(ev.DiscountPaise)/100.0)
+					}
+				}
+			}
+		}()
 
 		startTime := time.Now()
 		for _, sw := range stores {

@@ -2,6 +2,7 @@ package fulfillment
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -68,7 +69,7 @@ func TestDecisionEngine_BatchingFirstThenFallback(t *testing.T) {
 		if i <= 3 {
 			cartID = "cart-999"
 		}
-		s1.EnqueueOrder(&Order{ID: "ord-" + string(rune(i)), GroupCartID: cartID, Status: StatusQueued})
+		s1.EnqueueOrder(&Order{ID: fmt.Sprintf("ord-%d", i), GroupCartID: cartID, Status: StatusQueued})
 	}
 
 	assert.Greater(t, s1.ComputeLoad(), 0.85)
@@ -85,7 +86,7 @@ func TestDecisionEngine_BatchingFirstThenFallback(t *testing.T) {
 
 	// Fill s1 queue with additional orders so load > 85% even after consolidation
 	for i := 10; i <= 15; i++ {
-		s1.EnqueueOrder(&Order{ID: "ord-" + string(rune(i)), Status: StatusQueued})
+		s1.EnqueueOrder(&Order{ID: fmt.Sprintf("ord-%d", i), Status: StatusQueued})
 	}
 
 	// Evaluation 3 (at +40s, post grace window): Should fall through to Cost-Gated Decision Gate

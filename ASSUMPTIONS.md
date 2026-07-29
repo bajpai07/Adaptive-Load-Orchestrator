@@ -118,3 +118,24 @@ This document tracks all explicit simplifying assumptions made throughout the ar
      3. `RE_ROUTE_REJECTED_ON_COST`: Load $> 85\%$, post-grace window, $\text{reRouteCost} \ge \text{slaBreachPenalty}$.
      4. `RE_ROUTE_EXECUTED`: Load $> 85\%$, post-grace window, $\text{reRouteCost} < \text{slaBreachPenalty}$, stock reserved in Redis.
      5. `RE_ROUTE_FAILED_NO_STOCK`: Load $> 85\%$, post-grace window, cost-gate passed, but Redis stock unavailable.
+
+---
+
+## Phase 5 — Proactive Rider Trip Pooling & Demand Generation
+
+1. **Rider Movement Linear Interpolation Simplification**:
+   - *Model*: Rider position is updated on each simulation tick by advancing linearly along the straight-line segment $(\text{PickupLat/Lng} \to \text{DestinationLat/Lng})$ at a constant speed ($20\text{ km/h} \approx 5.56\text{ m/s}$).
+   - *Rationale*: Real road navigation (traffic lights, turn-by-turn routing, road curvature) is omitted in favor of simple linear interpolation over Haversine space. This focuses system complexity on distance-based event triggering and atomic Redis pooling state transitions.
+
+2. **Proximity Threshold (`proximityThreshold = 0.8 km / 800 meters`)**:
+   - *Rationale*: An active rider en route triggers a `TRIP_AVAILABLE` notification when their live Haversine distance to the destination geofence drops to $\le 800\text{ meters}$ ($\approx 8\text{ minutes}$ ETA at $20\text{ km/h}$). This provides nearby customers a realistic time window to pool their orders before the rider reaches the geofence.
+
+3. **Explicit Delivery Fee Discount Formula**:
+   - Base Delivery Fee: $\text{BaseFee} = ₹35.00$ ($3,500\text{ Paise}$).
+   - Dynamic pooled fee per order based on total orders $N$ on the Trip:
+     $$\text{DeliveryFeePaise}(N) = \begin{cases} 3,500\text{ Paise (₹35.00)} & N = 1 \\ 1,750\text{ Paise (₹17.50, 50\% split)} & N = 2 \\ 0\text{ Paise (₹0.00, 100\% waived)} & N \ge 3 \end{cases}$$
+   - Discount amount per order: $\text{DiscountPaise}(N) = \text{BaseFeePaise} - \text{DeliveryFeePaise}(N)$.
+
+4. **Relationship to Group Carts**:
+   - *Independence*: Joining a Rider Trip is independent of Group Cart membership. A customer order can attach directly to an active Rider Trip to claim a pooled delivery fee discount, or a whole Group Cart can link to a Trip. Group Carts focus on item-level shopping cart collaboration within a geofence, whereas Rider Trips focus on proactive dispatch pooling for en-route riders. Both mechanisms operate in parallel.
+
