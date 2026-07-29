@@ -237,8 +237,14 @@ func main() {
 				return
 			}
 			var req struct {
-				TripID  string `json:"trip_id"`
-				OrderID string `json:"order_id"`
+				TripID          string `json:"trip_id"`
+				OrderID         string `json:"order_id"`
+				MemberID        string `json:"member_id"`
+				DisplayName     string `json:"display_name"`
+				FlatLocation    string `json:"flat_location"`
+				ItemsSummary    string `json:"items_summary"`
+				OrderTotalPaise int64  `json:"order_total_paise"`
+				AvatarColor     string `json:"avatar_color"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -250,8 +256,33 @@ func main() {
 			if req.OrderID == "" {
 				req.OrderID = fmt.Sprintf("ord-web-%d", time.Now().UnixNano()%10000)
 			}
+			if req.DisplayName == "" {
+				req.DisplayName = "You (Web User)"
+			}
+			if req.FlatLocation == "" {
+				req.FlatLocation = "Flat 304, Tower B"
+			}
+			if req.ItemsSummary == "" {
+				req.ItemsSummary = "Organic Eggs (6-pack), Greek Yogurt"
+			}
+			if req.OrderTotalPaise == 0 {
+				req.OrderTotalPaise = 22000
+			}
+			if req.AvatarColor == "" {
+				req.AvatarColor = "#10B981"
+			}
 
-			t, err := tripStore.JoinTripAtomic(r.Context(), req.TripID, req.OrderID, 3500)
+			memberObj := &trip.TripMember{
+				OrderID:         req.OrderID,
+				MemberID:        req.MemberID,
+				DisplayName:     req.DisplayName,
+				FlatLocation:    req.FlatLocation,
+				ItemsSummary:    req.ItemsSummary,
+				OrderTotalPaise: req.OrderTotalPaise,
+				AvatarColor:     req.AvatarColor,
+			}
+
+			t, err := tripStore.JoinTripAtomic(r.Context(), req.TripID, req.OrderID, 3500, memberObj)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -270,15 +301,39 @@ func main() {
 				t = &trip.Trip{
 					ID:                     "trip-rider-1",
 					RiderID:                "rider-1",
+					RiderName:              "Rahul Sharma",
 					GeofenceID:             geofenceID,
-					MemberOrderIDs:         []string{"ord-host"},
+					GeofenceName:           "Aravali Heights, Tower B",
+					AssignedOrderCount:     4,
+					MemberOrderIDs:         []string{"ord-mem-1", "ord-mem-2"},
+					Members: []trip.TripMember{
+						{
+							OrderID:         "ord-mem-1",
+							MemberID:        "mem-1",
+							DisplayName:     "Aarav Mehta",
+							FlatLocation:    "Flat 402, Tower B",
+							ItemsSummary:    "Amul Taaza Milk (1L), Brown Bread",
+							OrderTotalPaise: 18500,
+							AvatarColor:     "#8B5CF6",
+						},
+						{
+							OrderID:         "ord-mem-2",
+							MemberID:        "mem-2",
+							DisplayName:     "Priya Sharma",
+							FlatLocation:    "Flat 201, Tower B",
+							ItemsSummary:    "Lay's Chips (52g), Coca-Cola (750ml)",
+							OrderTotalPaise: 14000,
+							AvatarColor:     "#EC4899",
+						},
+					},
 					BaseDeliveryFeePaise:   3500,
-					CurrentDeliveryFeePaise: 3500,
-					DiscountPaise:          0,
+					CurrentDeliveryFeePaise: 1750,
+					DiscountPaise:          1750,
 					ETASeconds:             360,
-					Status:                 trip.TripStatusAvailable,
+					Status:                 trip.TripStatusPooled,
 					CreatedAt:              time.Now(),
 				}
+				_ = tripStore.CreateOrUpdateTrip(r.Context(), t)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(t)
@@ -344,6 +399,7 @@ func main() {
 		// Register active rider heading toward Store-1 geofence (starts 1.5 km away)
 		riderSim.RegisterRider(&trip.Rider{
 			ID:                    "rider-1",
+			Name:                  "Rahul Sharma",
 			CurrentLat:            baseLat - 0.0135, // ~1.5 km away
 			CurrentLng:            baseLng,
 			PickupLat:             baseLat - 0.0135,
@@ -351,7 +407,7 @@ func main() {
 			DestinationGeofenceID: "geofence-aravali",
 			DestinationLat:        baseLat,
 			DestinationLng:        baseLng,
-			AssignedOrderIDs:      []string{"ord-primary-rider"},
+			AssignedOrderIDs:      []string{"ord-z101", "ord-z102", "ord-z103", "ord-z104"},
 			Status:                trip.RiderStatusEnRoute,
 			SpeedKmH:              30.0, // 30 km/h
 		})

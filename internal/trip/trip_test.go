@@ -105,8 +105,8 @@ func TestRiderMovementAndProximityDetection(t *testing.T) {
 		t.Fatalf("Failed to fetch created trip from Redis: %v", err)
 	}
 
-	if trip.Status != TripStatusAvailable {
-		t.Errorf("Expected TripStatusAvailable, got %s", trip.Status)
+	if trip.Status != TripStatusAvailable && trip.Status != TripStatusPooled {
+		t.Errorf("Expected TripStatusAvailable or TripStatusPooled, got %s", trip.Status)
 	}
 }
 
@@ -142,7 +142,7 @@ func TestRedisTripStore_ConcurrentJoins(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			orderID := fmt.Sprintf("ord-concurrent-%d", idx)
-			_, err := store.JoinTripAtomic(ctx, tripID, orderID, 3500)
+			_, err := store.JoinTripAtomic(ctx, tripID, orderID, 3500, nil)
 			if err != nil {
 				errChan <- err
 			}

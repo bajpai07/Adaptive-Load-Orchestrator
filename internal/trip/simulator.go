@@ -87,26 +87,48 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 
 			existingTrip, err := sim.store.GetTrip(ctx, tripID)
 			if err != nil || existingTrip == nil {
-				// Create new active Trip
+				riderName := r.Name
+				if riderName == "" {
+					riderName = "Rahul Sharma"
+				}
+
+				initialMembers := []TripMember{
+					{
+						OrderID:         "ord-mem-1",
+						MemberID:        "mem-1",
+						DisplayName:     "Aarav Mehta",
+						FlatLocation:    "Flat 402, Tower B",
+						ItemsSummary:    "Amul Taaza Milk (1L), Brown Bread",
+						OrderTotalPaise: 18500,
+						AvatarColor:     "#8B5CF6",
+					},
+					{
+						OrderID:         "ord-mem-2",
+						MemberID:        "mem-2",
+						DisplayName:     "Priya Sharma",
+						FlatLocation:    "Flat 201, Tower B",
+						ItemsSummary:    "Lay's Chips (52g), Coca-Cola (750ml)",
+						OrderTotalPaise: 14000,
+						AvatarColor:     "#EC4899",
+					},
+				}
+
 				newTrip := &Trip{
 					ID:                     tripID,
 					RiderID:                r.ID,
+					RiderName:              riderName,
 					GeofenceID:             r.DestinationGeofenceID,
-					MemberOrderIDs:         r.AssignedOrderIDs,
+					GeofenceName:           "Aravali Heights, Tower B",
+					AssignedOrderCount:     len(r.AssignedOrderIDs),
+					MemberOrderIDs:         []string{"ord-mem-1", "ord-mem-2"},
+					Members:                initialMembers,
 					BaseDeliveryFeePaise:   3500, // ₹35.00 Base Delivery Fee
-					CurrentDeliveryFeePaise: 3500,
-					DiscountPaise:          0,
+					CurrentDeliveryFeePaise: 1750, // 50% split for 2 members
+					DiscountPaise:          1750,
 					ETASeconds:             etaSec,
-					Status:                 TripStatusAvailable,
+					Status:                 TripStatusPooled,
 					CreatedAt:              time.Now(),
 					UpdatedAt:              time.Now(),
-				}
-
-				if len(r.AssignedOrderIDs) > 1 {
-					fee, disc := CalculateDeliveryFee(3500, len(r.AssignedOrderIDs))
-					newTrip.CurrentDeliveryFeePaise = fee
-					newTrip.DiscountPaise = disc
-					newTrip.Status = TripStatusPooled
 				}
 
 				if err := sim.store.CreateOrUpdateTrip(ctx, newTrip); err == nil {
@@ -114,8 +136,11 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 						Type:                   EventTripAvailable,
 						TripID:                 newTrip.ID,
 						RiderID:                r.ID,
+						RiderName:              riderName,
 						GeofenceID:             r.DestinationGeofenceID,
+						GeofenceName:           "Aravali Heights, Tower B",
 						MemberCount:            len(newTrip.MemberOrderIDs),
+						AssignedOrderCount:     len(r.AssignedOrderIDs),
 						BaseDeliveryFeePaise:   newTrip.BaseDeliveryFeePaise,
 						CurrentDeliveryFeePaise: newTrip.CurrentDeliveryFeePaise,
 						DiscountPaise:          newTrip.DiscountPaise,

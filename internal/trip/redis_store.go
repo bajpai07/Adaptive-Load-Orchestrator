@@ -13,6 +13,7 @@ const joinTripLuaScript = `
 local tripKey = KEYS[1]
 local orderID = ARGV[1]
 local baseFeePaise = tonumber(ARGV[2])
+local memberJSON = ARGV[3]
 
 local tripData = redis.call('GET', tripKey)
 if not tripData then
@@ -30,6 +31,12 @@ end
 
 if not exists then
     table.insert(trip.member_order_ids, orderID)
+    if memberJSON and #memberJSON > 0 then
+        if not trip.members then
+            trip.members = {}
+        end
+        table.insert(trip.members, cjson.decode(memberJSON))
+    end
     local count = #trip.member_order_ids
     local fee = baseFeePaise
     local discount = 0
@@ -82,8 +89,11 @@ func (s *RedisTripStore) CreateOrUpdateTrip(ctx context.Context, t *Trip) error 
 		Type:                   EventTripAvailable,
 		TripID:                 t.ID,
 		RiderID:                t.RiderID,
+		RiderName:              t.RiderName,
 		GeofenceID:             t.GeofenceID,
+		GeofenceName:           t.GeofenceName,
 		MemberCount:            len(t.MemberOrderIDs),
+		AssignedOrderCount:     t.AssignedOrderCount,
 		BaseDeliveryFeePaise:   t.BaseDeliveryFeePaise,
 		CurrentDeliveryFeePaise: t.CurrentDeliveryFeePaise,
 		DiscountPaise:          t.DiscountPaise,
@@ -121,10 +131,15 @@ func (s *RedisTripStore) GetActiveTripForGeofence(ctx context.Context, geofenceI
 	return s.GetTrip(ctx, tripID)
 }
 
-func (s *RedisTripStore) JoinTripAtomic(ctx context.Context, tripID string, orderID string, baseFeePaise int64) (*Trip, error) {
+func (s *RedisTripStore) JoinTripAtomic(ctx context.Context, tripID string, orderID string, baseFeePaise int64, member *TripMember) (*Trip, error) {
 	key := fmt.Sprintf("trip:%s", tripID)
+	memberJSON := ""
+	if member != nil {
+		data, _ := json.Marshal(member)
+		memberJSON = string(data)
+	}
 
-	res, err := s.rdb.Eval(ctx, joinTripLuaScript, []string{key}, orderID, baseFeePaise).Result()
+	res, err := s.rdb.Eval(ctx, joinTripLuaScript, []string{key}, orderID, baseFeePaise, memberJSON).Result()
 	if err != nil {
 		return nil, fmt.Errorf("atomic join trip failed: %w", err)
 	}
@@ -144,8 +159,11 @@ func (s *RedisTripStore) JoinTripAtomic(ctx context.Context, tripID string, orde
 		Type:                   EventTripUpdated,
 		TripID:                 updatedTrip.ID,
 		RiderID:                updatedTrip.RiderID,
+		RiderName:              updatedTrip.RiderName,
 		GeofenceID:             updatedTrip.GeofenceID,
+		GeofenceName:           updatedTrip.GeofenceName,
 		MemberCount:            len(updatedTrip.MemberOrderIDs),
+		AssignedOrderCount:     updatedTrip.AssignedOrderCount,
 		BaseDeliveryFeePaise:   updatedTrip.BaseDeliveryFeePaise,
 		CurrentDeliveryFeePaise: updatedTrip.CurrentDeliveryFeePaise,
 		DiscountPaise:          updatedTrip.DiscountPaise,

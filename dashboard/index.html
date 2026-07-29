@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zepto Shared Cart — Real-Time Group Shopping</title>
+    <title>Zepto — Rider Group Delivery</title>
     <!-- Google Fonts for Zepto Brand Aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,18 +11,20 @@
     
     <style>
         :root {
-            --purple-dark: #3B0B67;
-            --purple-main: #5B1793;
-            --purple-bright: #7C1FC4;
-            --purple-light: #F4ECFC;
-            --lime-accent: #C6FF3B;
-            --lime-glow: rgba(198, 255, 59, 0.4);
+            --zepto-purple-dark: #200B3B;
+            --zepto-purple-main: #3B0B67;
+            --zepto-purple-bright: #5B1793;
+            --zepto-purple-light: #F4ECFC;
+            --zepto-lime: #C6FF3B;
+            --zepto-lime-glow: rgba(198, 255, 59, 0.4);
             --bg-cream: #FAF7F2;
             --card-bg: #FFFFFF;
-            --text-ink: #1C1023;
+            --text-dark: #1C1023;
             --text-muted: #6C5C77;
             --border-light: #EFE9F4;
-            --red-alert: #FF4D4D;
+            --green-success: #10B981;
+            --green-light: #ECFDF5;
+            --orange-avatar: #F97316;
         }
 
         * {
@@ -33,7 +35,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-cream);
-            color: var(--text-ink);
+            color: var(--text-dark);
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -41,9 +43,9 @@
             flex-direction: column;
         }
 
-        /* Top Brand Navigation Bar (Edge-to-Edge) */
+        /* Top Brand Navigation Bar */
         .navbar {
-            background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple-main) 50%, var(--purple-bright) 100%);
+            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 50%, var(--zepto-purple-bright) 100%);
             color: #FFFFFF;
             padding: 14px 20px;
             box-shadow: 0 4px 20px rgba(59, 11, 103, 0.15);
@@ -53,239 +55,436 @@
         }
 
         .navbar-inner {
-            max-width: 1140px;
+            max-width: 600px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .brand-logo-group {
+        .brand-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .zepto-logo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        .zepto-badge {
             background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 99px;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             font-size: 0.95rem;
-            letter-spacing: 0.5px;
             color: #FFFFFF;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .speed-badge {
-            background: var(--lime-accent);
-            color: var(--text-ink);
+        .speed-pill {
+            background: var(--zepto-lime);
+            color: var(--text-dark);
             font-weight: 800;
             font-size: 0.65rem;
             padding: 2px 6px;
             border-radius: 6px;
-            text-transform: uppercase;
         }
 
-        .geofence-tag {
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.85);
+        .location-row {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             gap: 4px;
+            font-weight: 500;
         }
 
-        .connection-pill {
+        .ws-status-pill {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             background: rgba(0, 0, 0, 0.25);
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 99px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.9);
         }
 
-        .status-dot {
+        .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--red-alert);
+            background: #FF4D4D;
             display: inline-block;
-            transition: background 0.3s ease;
+        }
+        .dot.connected {
+            background: var(--zepto-lime);
+            box-shadow: 0 0 8px var(--zepto-lime);
         }
 
-        .status-dot.connected {
-            background: var(--lime-accent);
-            box-shadow: 0 0 8px var(--lime-accent);
-            animation: pulse-glow 2s infinite;
-        }
-
-        @keyframes pulse-glow {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.8; }
-        }
-
-        /* Main Responsive Container */
-        .app-container {
-            max-width: 1140px;
+        /* App View Container */
+        .app-view {
+            max-width: 600px;
             width: 100%;
             margin: 0 auto;
-            padding: 24px 16px;
+            padding: 16px;
             flex-grow: 1;
-        }
-
-        /* Fluid Desktop 2-Column Grid vs Mobile 1-Column Layout */
-        .layout-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        @media (min-width: 900px) {
-            .layout-grid {
-                grid-template-columns: 360px 1fr;
-                gap: 28px;
-                align-items: start;
-            }
-        }
-
-        /* Info & System Overview Card (Visible on Desktop & Tablet) */
-        .info-panel {
-            background: linear-gradient(145deg, #FFFFFF 0%, #FAF5FF 100%);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 10px 30px rgba(91, 23, 147, 0.05);
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .info-panel h2 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.25rem;
-            margin: 0;
-            color: var(--purple-main);
+        /* Search Bar Component */
+        .search-container {
+            position: relative;
         }
-
-        .info-panel p {
-            font-size: 0.88rem;
+        .search-input {
+            width: 100%;
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px 16px 12px 42px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
             color: var(--text-muted);
-            line-height: 1.5;
-            margin: 0;
         }
 
-        .feature-badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .feature-chip {
-            background: var(--purple-light);
-            color: var(--purple-main);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 8px;
-        }
-
-        /* Rider Trip Pooling Card */
-        .trip-card {
-            background: linear-gradient(135deg, #1C1023 0%, #3B0B67 100%);
+        /* SCREEN A: Discovery Banner Card */
+        .banner-card {
+            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 100%);
             color: #FFFFFF;
-            border-radius: 24px;
-            padding: 20px 24px;
+            border-radius: 20px;
+            padding: 18px 20px;
             box-shadow: 0 10px 30px rgba(59, 11, 103, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .banner-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 36px rgba(59, 11, 103, 0.3);
+        }
+        .banner-rider-badge {
+            width: 48px;
+            height: 48px;
+            background: rgba(198, 255, 59, 0.2);
+            border: 1px solid var(--zepto-lime);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .banner-content {
+            flex-grow: 1;
+        }
+        .banner-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.02rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 3px;
+        }
+        .banner-subtitle {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .banner-arrow-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #FFFFFF;
+            flex-shrink: 0;
         }
 
-        .trip-header {
+        /* Product Grid Section */
+        .section-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 10px 0 6px 0;
+            color: var(--text-dark);
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .product-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .product-img {
+            font-size: 2.2rem;
+            text-align: center;
+            padding: 10px 0;
+        }
+        .product-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1.2;
+            height: 2.4em;
+            overflow: hidden;
+        }
+        .product-price-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-top: 4px;
+        }
+        .product-price {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+        .btn-add-item {
+            background: var(--zepto-purple-light);
+            color: var(--zepto-purple-main);
+            border: 1px solid var(--zepto-purple-bright);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
-        .trip-title-box {
+        /* SCREEN B: Join Trip Detail Screen */
+        .back-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--zepto-purple-main);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+        .detail-header-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0 0 2px 0;
+        }
+        .detail-header-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* Elevated White Rider Card */
+        .rider-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rider-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .rider-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--orange-avatar);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #FFFFFF;
+        }
+        .rider-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 2px;
+        }
+        .rider-orders-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .rider-eta-box {
+            text-align: right;
+        }
+        .eta-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--zepto-purple-main);
+            line-height: 1;
+        }
+        .eta-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Dashed Discount Strip */
+        .discount-strip {
+            background: var(--green-light);
+            border: 1.5px dashed var(--green-success);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #065F46;
+            font-weight: 600;
+        }
+
+        /* Member List Section */
+        .member-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .member-count-pill {
+            background: var(--zepto-purple-light);
+            color: var(--zepto-purple-main);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 99px;
+        }
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .member-row {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .member-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-
-        .rider-avatar {
-            font-size: 1.4rem;
-            background: rgba(255, 255, 255, 0.15);
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .member-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .member-flat {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .member-items {
+            font-size: 0.75rem;
+            color: var(--zepto-purple-bright);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .member-price {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            text-align: right;
         }
 
-        .trip-title {
+        /* Bottom Sticky CTA Bar */
+        .sticky-cta-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-light);
+            padding: 14px 16px;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+            z-index: 99;
+        }
+        .cta-inner {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .btn-join-cta {
+            width: 100%;
+            background: var(--zepto-lime);
+            color: var(--text-dark);
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.05rem;
             font-weight: 700;
-        }
-
-        .trip-subtitle {
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .btn-join-trip {
-            background: var(--lime-accent);
-            color: var(--text-ink);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.82rem;
-            font-weight: 700;
-            padding: 8px 16px;
+            padding: 16px;
             border: none;
-            border-radius: 12px;
+            border-radius: 18px;
             cursor: pointer;
-            box-shadow: 0 4px 14px var(--lime-glow);
+            box-shadow: 0 8px 24px var(--zepto-lime-glow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
             transition: all 0.2s ease;
         }
-
-        .btn-join-trip:hover {
+        .btn-join-cta:hover {
             transform: translateY(-2px);
         }
-
-        .btn-join-trip.joined {
-            background: #34d399;
-            color: #064e3b;
+        .btn-join-cta.joined {
+            background: #10B981;
+            color: #FFFFFF;
         }
-
-        .trip-fee-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 10px 14px;
-            border-radius: 12px;
-            margin-top: 8px;
-        }
-
-        .discount-badge {
-            background: var(--lime-accent);
-            color: var(--text-ink);
+        .savings-highlight {
+            color: #064E3B;
             font-weight: 800;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 6px;
         }
+
+        /* Screen visibility toggles */
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; gap: 16px; }
     </style>
 </head>
 <body>
@@ -293,267 +492,311 @@
     <!-- Top Edge-to-Edge Navigation Bar -->
     <nav class="navbar">
         <div class="navbar-inner">
-            <div class="brand-logo-group">
-                <div class="zepto-logo-badge">
+            <div class="brand-group">
+                <div class="zepto-badge">
                     <span>zepto</span>
-                    <span class="speed-badge">10 MIN</span>
+                    <span class="speed-pill">10 MINS</span>
                 </div>
-                <span class="geofence-tag">📍 Aravali Heights Dark Store Geofence</span>
+                <div class="location-row">
+                    <span>📍 Aravali Heights, Tower B</span>
+                    <span style="font-size: 0.65rem;">▼</span>
+                </div>
             </div>
-            <div class="connection-pill">
-                <span id="ws-dot" class="status-dot"></span>
+            <div class="ws-status-pill">
+                <span id="ws-dot" class="dot"></span>
                 <span id="ws-status">Disconnected</span>
             </div>
         </div>
     </nav>
 
-    <!-- Main App Responsive Body Container -->
-    <main class="app-container">
-        <div class="layout-grid">
-            
-            <!-- Left Panel: Zepto Group Cart Explanation & Live Core Stats (Desktop/Tablet) -->
-            <aside class="info-panel">
-                <h2>Group Shared Shopping</h2>
-                <p>Collaborative multi-member carts consolidated automatically by dark-store geofences to unlock rewards and reduce dispatch overhead.</p>
-                <div class="feature-badge-list">
-                    <span class="feature-chip">⚡ Real-Time WebSockets</span>
-                    <span class="feature-chip">🔒 Redis Atomic Lock</span>
-                    <span class="feature-chip">🎁 Free Delivery Reward</span>
-                    <span class="feature-chip">🛵 Proactive Rider Pooling</span>
-                </div>
-            </aside>
+    <!-- Main Container -->
+    <div class="app-view">
 
-            <!-- Right Panel: Active Shared Cart & Reward Progress -->
-            <section class="cart-column">
-                
-                <!-- Phase 5 Rider Trip Pooling Banner -->
-                <div id="rider-trip-card" class="trip-card">
-                    <div class="trip-header">
-                        <div class="trip-title-box">
-                            <div class="rider-avatar">🛵</div>
-                            <div>
-                                <div class="trip-title">Proactive Rider Trip Pooling</div>
-                                <div class="trip-subtitle">Rider #101 En Route • ETA <span id="trip-eta">6.0m</span></div>
-                            </div>
+        <!-- SCREEN A: HOME VIEW (DISCOVERY) -->
+        <div id="screen-home" class="screen active">
+            <!-- Search Bar -->
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search for 'milk', 'chips', 'eggs'..." readonly>
+            </div>
+
+            <!-- Home Discovery Banner Card -->
+            <div id="home-rider-banner" class="banner-card" onclick="showScreen('detail')">
+                <div class="banner-rider-badge">🛵</div>
+                <div class="banner-content">
+                    <div class="banner-title">
+                        Rider <span id="home-rider-name">Rahul Sharma</span> is <span id="home-rider-eta">6</span> mins from your building
+                    </div>
+                    <div class="banner-subtitle">
+                        Join his trip — <span id="home-member-count">2</span> neighbours already in
+                    </div>
+                </div>
+                <div class="banner-arrow-btn">→</div>
+            </div>
+
+            <!-- Product Grid -->
+            <div>
+                <div class="section-heading">Fresh & Dairy</div>
+                <div class="product-grid">
+                    <div class="product-card">
+                        <div class="product-img">🥛</div>
+                        <div class="product-name">Amul Taaza Toned Milk (1L)</div>
+                        <div class="product-price-row">
+                            <span class="product-price">₹75.00</span>
+                            <button class="btn-add-item" onclick="addItemToCart('Amul Taaza Milk (1L)', 7500)">+ ADD</button>
                         </div>
-                        <button id="join-trip-btn" class="btn-join-trip" onclick="joinRiderTrip()">
-                            <span>⚡ Join Trip</span>
-                        </button>
                     </div>
-                    <div class="trip-fee-meta">
-                        <span>Pooled Delivery Fee: <strong id="trip-fee-text" style="color: var(--lime-accent);">₹35.00</strong></span>
-                        <span id="trip-discount-badge" class="discount-badge">SAVE 0%</span>
-                    </div>
-                </div>
-
-                <!-- Reward Unlock Progress Card -->
-                <div class="reward-card">
-                    <div class="reward-header">
-                        <div class="reward-title-box">
-                            <div class="reward-icon">🎁</div>
-                            <div class="reward-title">Group Delivery Reward</div>
+                    <div class="product-card">
+                        <div class="product-img">🥚</div>
+                        <div class="product-name">Organic Eggs (6-pack)</div>
+                        <div class="product-price-row">
+                            <span class="product-price">₹65.00</span>
+                            <button class="btn-add-item" onclick="addItemToCart('Organic Eggs (6-pack)', 6500)">+ ADD</button>
                         </div>
-                        <span id="unlock-badge" class="unlock-badge">LOCKED</span>
                     </div>
-
-                    <div class="progress-bar-container">
-                        <div id="progress-bar" class="progress-bar"></div>
-                    </div>
-
-                    <div class="reward-meta">
-                        <span>Target: <strong>₹200.00</strong></span>
-                        <span>Current: <span id="cart-total" class="cart-total-amount">₹0.00</span></span>
-                    </div>
-                </div>
-
-                <!-- Live Shared Items Section -->
-                <div class="items-section">
-                    <div class="section-header">
-                        <div class="section-title">Live Shared Items</div>
-                        <span id="item-count" class="item-count-pill">0 ITEMS</span>
-                    </div>
-
-                    <ul id="item-list" class="item-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">🛒</div>
-                            <p style="margin:0 0 4px 0; font-weight:600;">Shared cart is empty</p>
-                            <small>Add items to unlock group rewards!</small>
+                    <div class="product-card">
+                        <div class="product-img">🥣</div>
+                        <div class="product-name">Country Delight Dahi (400g)</div>
+                        <div class="product-price-row">
+                            <span class="product-price">₹45.00</span>
+                            <button class="btn-add-item" onclick="addItemToCart('Country Delight Dahi (400g)', 4500)">+ ADD</button>
                         </div>
-                    </ul>
+                    </div>
                 </div>
 
-                <!-- Simulate Add Item Action Button -->
-                <div class="action-container">
-                    <button id="add-item-btn" class="btn-cta" onclick="addItem()">
-                        <span>⚡ Simulate Add Item</span>
-                        <span style="opacity: 0.85;">(+₹60.00)</span>
+                <div class="section-heading">Snacks & Drinks</div>
+                <div class="product-grid">
+                    <div class="product-card">
+                        <div class="product-img">🥔</div>
+                        <div class="product-name">Lay's Magic Masala (52g)</div>
+                        <div class="product-price-row">
+                            <span class="product-price">₹20.00</span>
+                            <button class="btn-add-item" onclick="addItemToCart('Lay\'s Magic Masala', 2000)">+ ADD</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-img">🥤</div>
+                        <div class="product-name">Coca-Cola Drink (750ml)</div>
+                        <div class="product-price-row">
+                            <span class="product-price">₹40.00</span>
+                            <button class="btn-add-item" onclick="addItemToCart('Coca-Cola (750ml)', 4000)">+ ADD</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN B: JOIN TRIP DETAIL VIEW -->
+        <div id="screen-detail" class="screen" style="padding-bottom: 90px;">
+            <!-- Top Navigation & Title -->
+            <div>
+                <div class="back-nav" onclick="showScreen('home')">← Group Delivery</div>
+                <div class="detail-header-title">Ride with <span id="detail-rider-name">Rahul Sharma</span>'s trip</div>
+                <div id="detail-geofence-name" class="detail-header-sub">Aravali Heights, Tower B</div>
+            </div>
+
+            <!-- White Rider Card -->
+            <div class="rider-card">
+                <div class="rider-left">
+                    <div class="rider-avatar">🛵</div>
+                    <div>
+                        <div id="card-rider-name" class="rider-name">Rahul Sharma</div>
+                        <div class="rider-orders-sub">Already carrying <span id="detail-assigned-count">4</span> orders</div>
+                    </div>
+                </div>
+                <div class="rider-eta-box">
+                    <div id="detail-eta-number" class="eta-number">6</div>
+                    <div class="eta-label">MINS AWAY</div>
+                </div>
+            </div>
+
+            <!-- Dashed Green Discount Strip -->
+            <div class="discount-strip">
+                <span style="font-size: 1.2rem;">🎉</span>
+                <span id="detail-discount-text">3rd person to join saves ₹35.00 delivery fee — 100% waived across the trip</span>
+            </div>
+
+            <!-- Already On This Trip Section -->
+            <div>
+                <div class="member-section-header">
+                    <div class="section-heading">Already on this trip</div>
+                    <span id="detail-member-badge" class="member-count-pill">2 Members</span>
+                </div>
+
+                <ul id="detail-member-list" class="member-list">
+                    <!-- Dynamic member rows rendered from WebSocket/API -->
+                </ul>
+            </div>
+
+            <!-- Sticky Bottom CTA -->
+            <div class="sticky-cta-bar">
+                <div class="cta-inner">
+                    <button id="join-trip-cta-btn" class="btn-join-cta" onclick="joinRiderTrip()">
+                        <span id="cta-btn-label">Join trip — pay ₹17.50 delivery fee <span class="savings-highlight">(Save ₹17.50)</span></span>
                     </button>
                 </div>
-
-            </section>
-
+            </div>
         </div>
-    </main>
+
+    </div>
 
     <script>
         const geofenceID = "geofence-aravali";
-        const memberID = "mem-ui-" + Math.floor(Math.random() * 1000);
-        let cartID = "";
-        let prevItemCount = 0;
+        const memberID = "mem-web-" + Math.floor(Math.random() * 1000);
+        let hasJoinedTrip = false;
+        let currentTripData = null;
 
-        async function init() {
-            try {
-                const resp = await fetch("/api/carts/join", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        geofence_id: geofenceID,
-                        member_id: memberID,
-                        display_name: "Web User",
-                        lat: 28.6315,
-                        lng: 77.2167,
-                        radius_meters: 500,
-                        unlock_threshold_paise: 20000,
-                        ttl_seconds: 1800
-                    })
-                });
-                if (!resp.ok) {
-                    console.error(`Cart join failed: HTTP ${resp.status} ${resp.statusText}. Ensure server is running: go run ./cmd/sim/main.go --port=9999`);
-                    return;
-                }
-                const cart = await resp.json();
-                cartID = cart.id;
-                updateUI(cart);
-                connectWS(cart.id);
-            } catch (e) {
-                console.error("Cart join error:", e);
+        function showScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if (name === 'home') {
+                document.getElementById('screen-home').classList.add('active');
+            } else {
+                document.getElementById('screen-detail').classList.add('active');
             }
         }
 
-        function connectWS(cid) {
+        function connectWS() {
             const wsScheme = window.location.protocol === "https:" ? "wss:" : "ws:";
-            const ws = new WebSocket(`${wsScheme}//${window.location.host}/ws/cart?cart_id=${cid}&member_id=${memberID}`);
+            const ws = new WebSocket(`${wsScheme}//${window.location.host}/ws/ops`);
+            const wsDot = document.getElementById("ws-dot");
+            const wsStatus = document.getElementById("ws-status");
 
             ws.onopen = () => {
-                document.getElementById("ws-dot").classList.add("connected");
-                document.getElementById("ws-status").innerText = "Live Connected";
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === "CART_UPDATED" || data.type === "CART_UNLOCKED") {
-                    fetchCart();
-                }
+                wsDot.classList.add("connected");
+                wsStatus.innerText = "Connected";
             };
 
             ws.onclose = () => {
-                document.getElementById("ws-dot").classList.remove("connected");
-                document.getElementById("ws-status").innerText = "Disconnected";
-                setTimeout(() => connectWS(cid), 2000);
+                wsDot.classList.remove("connected");
+                wsStatus.innerText = "Disconnected";
+                setTimeout(connectWS, 2000);
+            };
+
+            ws.onmessage = (evt) => {
+                try {
+                    const data = JSON.parse(evt.data);
+                    if (data.type === "TRIP_AVAILABLE" || data.type === "TRIP_UPDATED") {
+                        fetchActiveTrip();
+                    }
+                } catch (e) {}
             };
         }
 
-        async function fetchCart() {
-            if (!cartID) return;
+        async function fetchActiveTrip() {
             try {
-                const resp = await fetch(`/api/carts/join`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        geofence_id: geofenceID,
-                        member_id: memberID,
-                        display_name: "Web User"
-                    })
-                });
-                if (!resp.ok) return;
-                const cart = await resp.json();
-                updateUI(cart);
+                const resp = await fetch(`/api/trips/active?geofence_id=${geofenceID}`);
+                if (resp.ok) {
+                    const trip = await resp.json();
+                    currentTripData = trip;
+                    renderTripUI(trip);
+                }
             } catch (e) {
-                console.error("Cart fetch error:", e);
+                console.error("Failed to fetch active trip:", e);
             }
         }
 
-        async function addItem() {
-            if (!cartID) return;
-            const btn = document.getElementById("add-item-btn");
-            btn.style.transform = "scale(0.96)";
-            setTimeout(() => btn.style.transform = "none", 150);
+        function renderTripUI(trip) {
+            if (!trip) return;
 
-            try {
-                await fetch("/api/carts/item", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        cart_id: cartID,
-                        sku: "SKU-PROMO",
-                        name: "Organic Avocados (2x)",
-                        price_paise: 6000,
-                        added_by_member_id: memberID
-                    })
-                });
-            } catch (e) {
-                console.error("Add item error:", e);
+            const riderName = trip.rider_name || "Rahul Sharma";
+            const geofenceName = trip.geofence_name || "Aravali Heights, Tower B";
+            const assignedCount = trip.assigned_order_count || 4;
+            const etaMin = trip.eta_seconds ? Math.max(1, Math.round(trip.eta_seconds / 60)) : 6;
+            let members = trip.members || [];
+            if (!members || members.length === 0) {
+                members = [
+                    {
+                        order_id: "ord-mem-1",
+                        member_id: "mem-1",
+                        display_name: "Aarav Mehta",
+                        flat_location: "Flat 402, Tower B",
+                        items_summary: "Amul Taaza Milk (1L), Brown Bread",
+                        order_total_paise: 18500,
+                        avatar_color: "#8B5CF6"
+                    },
+                    {
+                        order_id: "ord-mem-2",
+                        member_id: "mem-2",
+                        display_name: "Priya Sharma",
+                        flat_location: "Flat 201, Tower B",
+                        items_summary: "Lay's Chips (52g), Coca-Cola (750ml)",
+                        order_total_paise: 14000,
+                        avatar_color: "#EC4899"
+                    }
+                ];
             }
-        }
+            const memberCount = members.length;
 
-        function updateUI(cart) {
-            const totalRupees = (cart.total_paise / 100).toFixed(2);
-            document.getElementById("cart-total").innerText = `₹${totalRupees}`;
-            
-            const pct = Math.min(100, (cart.total_paise / cart.unlock_threshold_paise) * 100);
-            document.getElementById("progress-bar").style.width = `${pct}%`;
+            // Screen A Bindings
+            document.getElementById('home-rider-name').innerText = riderName;
+            document.getElementById('home-rider-eta').innerText = etaMin;
+            document.getElementById('home-member-count').innerText = memberCount;
 
-            const badge = document.getElementById("unlock-badge");
-            if (cart.unlocked) {
-                badge.innerText = "UNLOCKED! ⚡";
-                badge.classList.add("unlocked");
+            // Screen B Bindings
+            document.getElementById('detail-rider-name').innerText = riderName;
+            document.getElementById('card-rider-name').innerText = riderName;
+            document.getElementById('detail-geofence-name').innerText = geofenceName;
+            document.getElementById('detail-assigned-count').innerText = assignedCount;
+            document.getElementById('detail-eta-number').innerText = etaMin;
+            document.getElementById('detail-member-badge').innerText = `${memberCount} Members`;
+
+            // Discount Strip Copy
+            const nextNth = memberCount + 1;
+            const currentFee = trip.current_delivery_fee_paise !== undefined ? trip.current_delivery_fee_paise : 1750;
+            const discount = trip.discount_paise !== undefined ? trip.discount_paise : 1750;
+
+            let stripCopy = "";
+            if (nextNth === 2) {
+                stripCopy = "2nd person to join saves ₹17.50 delivery fee — split across the trip";
+            } else if (nextNth >= 3) {
+                stripCopy = `${nextNth}rd person to join saves ₹35.00 delivery fee — 100% waived across the trip`;
+            }
+            document.getElementById('detail-discount-text').innerText = stripCopy;
+
+            // Member Rows List Rendering
+            const memberListEl = document.getElementById('detail-member-list');
+            if (members.length > 0) {
+                memberListEl.innerHTML = members.map(m => {
+                    const initials = (m.display_name || "Member").split(' ').map(n => n[0]).join('').toUpperCase();
+                    const color = m.avatar_color || "#8B5CF6";
+                    const price = (m.order_total_paise / 100).toFixed(2);
+                    return `
+                        <li class="member-row">
+                            <div class="member-left">
+                                <div class="member-avatar" style="background: ${color};">${initials}</div>
+                                <div>
+                                    <div class="member-name">${m.display_name}</div>
+                                    <div class="member-flat">${m.flat_location || "Tower B"}</div>
+                                    <div class="member-items">${m.items_summary || "Group Order"}</div>
+                                </div>
+                            </div>
+                            <div class="member-price">₹${price}</div>
+                        </li>
+                    `;
+                }).join('');
+            }
+
+            // CTA Button Copy & Fee Logic
+            const ctaBtn = document.getElementById('join-trip-cta-btn');
+            const ctaLabel = document.getElementById('cta-btn-label');
+
+            if (hasJoinedTrip) {
+                ctaBtn.classList.add('joined');
+                ctaLabel.innerHTML = `<span>Joined Trip ⚡ — Delivery Fee ₹${(currentFee/100).toFixed(2)}</span>`;
             } else {
-                badge.innerText = "LOCKED";
-                badge.classList.remove("unlocked");
+                if (currentFee === 0) {
+                    ctaLabel.innerHTML = `<span>Join trip — FREE ₹0.00 delivery fee <span class="savings-highlight">(Saved ₹35.00 ⚡)</span></span>`;
+                } else {
+                    const feeText = (currentFee / 100).toFixed(2);
+                    const discText = (discount / 100).toFixed(2);
+                    ctaLabel.innerHTML = `<span>Join trip — pay ₹${feeText} delivery fee <span class="savings-highlight">(Save ₹${discText})</span></span>`;
+                }
             }
-
-            const countPill = document.getElementById("item-count");
-            const items = cart.items || [];
-            countPill.innerText = `${items.length} ITEM${items.length === 1 ? '' : 'S'}`;
-
-            const list = document.getElementById("item-list");
-            if (items.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🛒</div>
-                        <p style="margin:0 0 4px 0; font-weight:600;">Shared cart is empty</p>
-                        <small>Add items to unlock group rewards!</small>
-                    </div>`;
-                prevItemCount = 0;
-                return;
-            }
-
-            const isNewItemAdded = items.length > prevItemCount && prevItemCount > 0;
-            prevItemCount = items.length;
-
-            list.innerHTML = items.map((item, idx) => {
-                const isLatest = isNewItemAdded && idx === items.length - 1;
-                const animateClass = isLatest ? "animate-entrance" : "";
-                const isMe = item.added_by_member_id === memberID;
-                const memberTag = isMe ? `<span class="member-tag me">You</span>` : `<span class="member-tag">${item.added_by_member_id}</span>`;
-                
-                return `
-                    <li class="item-card ${animateClass}">
-                        <div class="item-icon-box">🥑</div>
-                        <div class="item-details">
-                            <div class="item-title">${item.name}</div>
-                            <div class="item-member">Added by ${memberTag}</div>
-                        </div>
-                        <div class="item-price">₹${(item.price_paise / 100).toFixed(2)}</div>
-                    </li>
-                `;
-            }).join('');
         }
 
         async function joinRiderTrip() {
-            const btn = document.getElementById("join-trip-btn");
-            btn.innerHTML = "<span>Joined ⚡</span>";
-            btn.classList.add("joined");
+            if (hasJoinedTrip) return;
+            hasJoinedTrip = true;
 
             try {
                 const resp = await fetch("/api/trips/join", {
@@ -561,42 +804,33 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         trip_id: "trip-rider-1",
-                        order_id: memberID
+                        order_id: "ord-web-" + Math.floor(Math.random() * 1000),
+                        member_id: memberID,
+                        display_name: "You (Web User)",
+                        flat_location: "Flat 304, Tower B",
+                        items_summary: "Organic Eggs (6-pack), Greek Yogurt",
+                        order_total_paise: 22000,
+                        avatar_color: "#10B981"
                     })
                 });
                 if (resp.ok) {
                     const trip = await resp.json();
-                    updateTripUI(trip);
+                    currentTripData = trip;
+                    renderTripUI(trip);
                 }
             } catch (e) {
                 console.error("Join trip error:", e);
             }
         }
 
-        function updateTripUI(tripData) {
-            if (!tripData) return;
-            if (tripData.eta_seconds !== undefined) {
-                const etaMin = (tripData.eta_seconds / 60).toFixed(1);
-                document.getElementById("trip-eta").innerText = `${etaMin}m`;
-            }
-            if (tripData.current_delivery_fee_paise !== undefined) {
-                const feeRupees = (tripData.current_delivery_fee_paise / 100).toFixed(2);
-                document.getElementById("trip-fee-text").innerText = `₹${feeRupees}`;
-                
-                const badge = document.getElementById("trip-discount-badge");
-                if (tripData.current_delivery_fee_paise === 0) {
-                    badge.innerText = "100% WAIVED ⚡";
-                    badge.style.background = "#C6FF3B";
-                } else if (tripData.current_delivery_fee_paise === 1750) {
-                    badge.innerText = "SAVE 50%";
-                    badge.style.background = "#F4FFD6";
-                } else {
-                    badge.innerText = "SAVE 0%";
-                }
-            }
+        async function addItemToCart(name, pricePaise) {
+            joinRiderTrip();
         }
 
-        window.onload = init;
+        window.onload = () => {
+            connectWS();
+            fetchActiveTrip();
+        };
     </script>
 </body>
 </html>

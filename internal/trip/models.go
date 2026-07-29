@@ -20,6 +20,7 @@ const (
 
 type Rider struct {
 	ID                    string      `json:"id"`
+	Name                  string      `json:"name"` // e.g. "Rahul Sharma"
 	CurrentLat            float64     `json:"current_lat"`
 	CurrentLng            float64     `json:"current_lng"`
 	PickupLat             float64     `json:"pickup_lat"`
@@ -42,18 +43,32 @@ const (
 	TripStatusCompleted  TripStatus = "COMPLETED"
 )
 
+type TripMember struct {
+	OrderID         string `json:"order_id"`
+	MemberID        string `json:"member_id"`
+	DisplayName     string `json:"display_name"`      // e.g. "Aarav Mehta"
+	FlatLocation    string `json:"flat_location"`     // e.g. "Flat 402, Tower B"
+	ItemsSummary    string `json:"items_summary"`     // e.g. "Amul Taaza Milk (1L), Bread"
+	OrderTotalPaise int64  `json:"order_total_paise"`  // e.g. 18500 (₹185.00)
+	AvatarColor     string `json:"avatar_color"`      // e.g. "#8B5CF6"
+}
+
 type Trip struct {
-	ID                     string     `json:"id"`
-	RiderID                string     `json:"rider_id"`
-	GeofenceID             string     `json:"geofence_id"`
-	MemberOrderIDs         []string   `json:"member_order_ids"`
-	BaseDeliveryFeePaise   int64      `json:"base_delivery_fee_paise"` // 3500 Paise = ₹35.00
-	CurrentDeliveryFeePaise int64      `json:"current_delivery_fee_paise"`
-	DiscountPaise          int64      `json:"discount_paise"`
-	ETASeconds             float64    `json:"eta_seconds"`
-	Status                 TripStatus `json:"status"`
-	CreatedAt              time.Time  `json:"created_at"`
-	UpdatedAt              time.Time  `json:"updated_at"`
+	ID                     string       `json:"id"`
+	RiderID                string       `json:"rider_id"`
+	RiderName              string       `json:"rider_name"`               // e.g. "Rahul Sharma"
+	GeofenceID             string       `json:"geofence_id"`
+	GeofenceName           string       `json:"geofence_name"`             // e.g. "Aravali Heights, Tower B"
+	AssignedOrderCount     int          `json:"assigned_order_count"`      // e.g. 4
+	MemberOrderIDs         []string     `json:"member_order_ids"`
+	Members                []TripMember `json:"members"`
+	BaseDeliveryFeePaise   int64        `json:"base_delivery_fee_paise"`   // 3500 Paise = ₹35.00
+	CurrentDeliveryFeePaise int64        `json:"current_delivery_fee_paise"`
+	DiscountPaise          int64        `json:"discount_paise"`
+	ETASeconds             float64      `json:"eta_seconds"`
+	Status                 TripStatus   `json:"status"`
+	CreatedAt              time.Time    `json:"created_at"`
+	UpdatedAt              time.Time    `json:"updated_at"`
 }
 
 type TripEventType string
@@ -69,8 +84,11 @@ type TripEvent struct {
 	Type                   TripEventType `json:"type"`
 	TripID                 string        `json:"trip_id"`
 	RiderID                string        `json:"rider_id"`
+	RiderName              string        `json:"rider_name"`
 	GeofenceID             string        `json:"geofence_id"`
+	GeofenceName           string        `json:"geofence_name"`
 	MemberCount            int           `json:"member_count"`
+	AssignedOrderCount     int           `json:"assigned_order_count"`
 	BaseDeliveryFeePaise   int64         `json:"base_delivery_fee_paise"`
 	CurrentDeliveryFeePaise int64         `json:"current_delivery_fee_paise"`
 	DiscountPaise          int64         `json:"discount_paise"`
@@ -79,10 +97,6 @@ type TripEvent struct {
 }
 
 // CalculateDeliveryFee computes the pooled delivery fee per member based on total pooled order count.
-// Formula:
-//   1 Order  => Full fee (BaseDeliveryFeePaise, e.g. 3,500 Paise = ₹35.00)
-//   2 Orders => Half fee (BaseDeliveryFeePaise / 2, e.g. 1,750 Paise = ₹17.50)
-//   3+ Orders => Free (0 Paise = ₹0.00, 100% Waived)
 func CalculateDeliveryFee(baseFeePaise int64, memberCount int) (currentFeePaise int64, discountPaise int64) {
 	if memberCount <= 1 {
 		return baseFeePaise, 0
