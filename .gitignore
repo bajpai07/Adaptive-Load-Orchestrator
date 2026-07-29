@@ -6,8 +6,8 @@
 *.dylib
 *.test
 *.out
-sim
-cartsim
+/sim
+/cartsim
 
 # Environment files
 .env
