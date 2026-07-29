@@ -725,12 +725,26 @@
                     }
                 ];
             }
-            const memberCount = members.length;
+            const currentMemberCount = members.length;
+            const isUserInMembers = members.some(m => m.member_id === memberID) || hasJoinedTrip;
+            const targetCountForUser = isUserInMembers ? currentMemberCount : currentMemberCount + 1;
+
+            // Compute exact fee for joining user based on target member count
+            // Tier formula: N=1 => ₹35.00 (3500p), N=2 => ₹17.50 (1750p), N>=3 => ₹0.00 (0p)
+            let userFeePaise = 3500;
+            let userDiscountPaise = 0;
+            if (targetCountForUser === 2) {
+                userFeePaise = 1750;
+                userDiscountPaise = 1750;
+            } else if (targetCountForUser >= 3) {
+                userFeePaise = 0;
+                userDiscountPaise = 3500;
+            }
 
             // Screen A Bindings
             document.getElementById('home-rider-name').innerText = riderName;
             document.getElementById('home-rider-eta').innerText = etaMin;
-            document.getElementById('home-member-count').innerText = memberCount;
+            document.getElementById('home-member-count').innerText = currentMemberCount;
 
             // Screen B Bindings
             document.getElementById('detail-rider-name').innerText = riderName;
@@ -738,18 +752,24 @@
             document.getElementById('detail-geofence-name').innerText = geofenceName;
             document.getElementById('detail-assigned-count').innerText = assignedCount;
             document.getElementById('detail-eta-number').innerText = etaMin;
-            document.getElementById('detail-member-badge').innerText = `${memberCount} Members`;
+            document.getElementById('detail-member-badge').innerText = `${currentMemberCount} Members`;
 
             // Discount Strip Copy
-            const nextNth = memberCount + 1;
-            const currentFee = trip.current_delivery_fee_paise !== undefined ? trip.current_delivery_fee_paise : 1750;
-            const discount = trip.discount_paise !== undefined ? trip.discount_paise : 1750;
-
             let stripCopy = "";
-            if (nextNth === 2) {
-                stripCopy = "2nd person to join saves ₹17.50 delivery fee — split across the trip";
-            } else if (nextNth >= 3) {
-                stripCopy = `${nextNth}rd person to join saves ₹35.00 delivery fee — 100% waived across the trip`;
+            if (isUserInMembers) {
+                if (currentMemberCount === 1) {
+                    stripCopy = "1 person on trip — pay full ₹35.00 delivery fee";
+                } else if (currentMemberCount === 2) {
+                    stripCopy = "2 members on trip — delivery fee split 50% (₹17.50 each)";
+                } else {
+                    stripCopy = `${currentMemberCount} members on trip — 100% fee waived for everyone! 🎉`;
+                }
+            } else {
+                if (targetCountForUser === 2) {
+                    stripCopy = "2nd person to join saves ₹17.50 delivery fee — split across the trip";
+                } else {
+                    stripCopy = `${targetCountForUser}rd person to join saves ₹35.00 delivery fee — 100% waived across the trip`;
+                }
             }
             document.getElementById('detail-discount-text').innerText = stripCopy;
 
@@ -780,15 +800,20 @@
             const ctaBtn = document.getElementById('join-trip-cta-btn');
             const ctaLabel = document.getElementById('cta-btn-label');
 
-            if (hasJoinedTrip) {
+            if (isUserInMembers) {
                 ctaBtn.classList.add('joined');
-                ctaLabel.innerHTML = `<span>Joined Trip ⚡ — Delivery Fee ₹${(currentFee/100).toFixed(2)}</span>`;
-            } else {
-                if (currentFee === 0) {
-                    ctaLabel.innerHTML = `<span>Join trip — FREE ₹0.00 delivery fee <span class="savings-highlight">(Saved ₹35.00 ⚡)</span></span>`;
+                if (userFeePaise === 0) {
+                    ctaLabel.innerHTML = `<span>Joined Trip ⚡ — Delivery Fee FREE ₹0.00 (Saved ₹35.00)</span>`;
                 } else {
-                    const feeText = (currentFee / 100).toFixed(2);
-                    const discText = (discount / 100).toFixed(2);
+                    ctaLabel.innerHTML = `<span>Joined Trip ⚡ — Delivery Fee ₹${(userFeePaise/100).toFixed(2)}</span>`;
+                }
+            } else {
+                ctaBtn.classList.remove('joined');
+                if (userFeePaise === 0) {
+                    ctaLabel.innerHTML = `<span>Join trip — FREE ₹0.00 delivery fee <span class="savings-highlight">(Save ₹35.00 ⚡)</span></span>`;
+                } else {
+                    const feeText = (userFeePaise / 100).toFixed(2);
+                    const discText = (userDiscountPaise / 100).toFixed(2);
                     ctaLabel.innerHTML = `<span>Join trip — pay ₹${feeText} delivery fee <span class="savings-highlight">(Save ₹${discText})</span></span>`;
                 }
             }
