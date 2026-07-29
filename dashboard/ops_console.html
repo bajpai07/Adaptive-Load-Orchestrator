@@ -224,7 +224,8 @@
     let mergedCount = 0;
 
     function connectWS() {
-      const ws = new WebSocket('ws://' + window.location.host + '/ws/ops');
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      const ws = new WebSocket(wsProtocol + window.location.host + '/ws/ops');
       const wsDot = document.getElementById('wsDot');
       const wsText = document.getElementById('wsText');
       const timeline = document.getElementById('timeline');
