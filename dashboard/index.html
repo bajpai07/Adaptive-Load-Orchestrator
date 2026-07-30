@@ -995,6 +995,19 @@
             box-shadow: 0 4px 14px rgba(59, 11, 103, 0.3);
         }
 
+        .you-pill-badge {
+            background: var(--zepto-lime);
+            color: #000000;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 99px;
+            margin-left: 6px;
+            display: inline-block;
+            vertical-align: middle;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
         /* 11. Group Cart Drawer / Modal */
         .cart-drawer-overlay {
             position: fixed;
@@ -1724,12 +1737,16 @@
                     const initials = (m.display_name || "Member").split(' ').map(n => n[0]).join('').toUpperCase();
                     const color = m.avatar_color || "#8B5CF6";
                     const price = (m.order_total_paise / 100).toFixed(2);
+                    
+                    const isSelf = (m.member_id === memberID || m.member_id === "mem-web-304");
+                    const nameLabel = isSelf ? `${m.display_name || "Vikram Kumar"} <span class="you-pill-badge">(You)</span>` : (m.display_name || "Member");
+
                     return `
                         <li class="member-row">
                             <div class="member-left">
                                 <div class="member-avatar" style="background: ${color};">${initials}</div>
                                 <div>
-                                    <div class="member-name">${m.display_name}</div>
+                                    <div class="member-name">${nameLabel}</div>
                                     <div class="member-flat">${m.flat_location || "Tower B"}</div>
                                     <div class="member-items">${m.items_summary || "Group Order"}</div>
                                 </div>
@@ -1769,6 +1786,17 @@
             }
         }
 
+        function formatItemsSummary(itemNames) {
+            if (!itemNames || itemNames.length === 0) return "Pending items in Group Cart";
+            const counts = {};
+            itemNames.forEach(name => {
+                counts[name] = (counts[name] || 0) + 1;
+            });
+            return Object.entries(counts)
+                .map(([name, qty]) => qty > 1 ? `${name} × ${qty}` : name)
+                .join(', ');
+        }
+
         async function joinRiderTrip() {
             if (hasJoinedTrip) return;
             hasJoinedTrip = true;
@@ -1779,7 +1807,7 @@
         async function syncTripWithLiveCart() {
             const stableOrderID = "ord-web-304";
             const stableMemberID = "mem-web-304";
-            const itemsSummaryText = liveCartItems.length > 0 ? liveCartItems.join(', ') : "Pending items in Group Cart";
+            const itemsSummaryText = formatItemsSummary(liveCartItems);
             const totalPaiseVal = cartTotalPaise;
 
             try {
