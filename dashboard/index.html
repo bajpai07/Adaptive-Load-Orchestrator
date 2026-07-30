@@ -1461,11 +1461,8 @@
         const geofenceID = "geofence-aravali";
         const memberID = "mem-web-304";
 
-        async function connectWS() {
-            const dot = document.getElementById('ws-dot');
-            const status = document.getElementById('ws-status');
-
-            // 1. Join or get active Group Cart for geofence
+        async function ensureCartJoined() {
+            if (currentCartID) return currentCartID;
             try {
                 const resp = await fetch("/api/carts/join", {
                     method: "POST",
@@ -1485,13 +1482,19 @@
                     const cart = await resp.json();
                     currentCartID = cart.id;
                     renderCart(cart);
+                    return currentCartID;
                 }
             } catch (e) {
                 console.error("Cart join error:", e);
             }
+            return "cart-group-aravali";
+        }
 
-            // 2. Connect WebSocket to registered route /ws/cart
-            const wsCartID = currentCartID || "cart-group-aravali";
+        async function connectWS() {
+            const dot = document.getElementById('ws-dot');
+            const status = document.getElementById('ws-status');
+
+            const wsCartID = await ensureCartJoined();
             const wsUrl = `${protocol}${window.location.host}/ws/cart?cart_id=${wsCartID}&member_id=${memberID}`;
 
             ws = new WebSocket(wsUrl);
@@ -1728,10 +1731,10 @@
             }
         }
 
-        async function addItemToCart(name, pricePaise) {
-            const targetCartID = currentCartID || "cart-group-aravali";
+        async function addItemToCart(name, pricePaise, autoOpenDrawer = false) {
+            const targetCartID = await ensureCartJoined();
             try {
-                await fetch("/api/carts/item", {
+                const resp = await fetch("/api/carts/item", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -1742,14 +1745,30 @@
                         added_by_member_id: memberID
                     })
                 });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.cart) {
+                        renderCart(data.cart);
+                    }
+                }
             } catch (e) {
                 console.error("Add item error:", e);
             }
-            toggleCartDrawer();
+            if (autoOpenDrawer) {
+                openCartDrawer();
+            }
         }
 
         async function simulateAddItemBackend() {
-            await addItemToCart("Amul Taaza Milk (1L)", 7500);
+            await addItemToCart("Amul Taaza Milk (1L)", 7500, true);
+        }
+
+        function openCartDrawer() {
+            document.getElementById('cart-drawer-overlay').classList.add('open');
+        }
+
+        function closeCartDrawer() {
+            document.getElementById('cart-drawer-overlay').classList.remove('open');
         }
 
         function openScreenB() {
