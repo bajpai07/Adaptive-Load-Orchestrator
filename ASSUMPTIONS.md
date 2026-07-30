@@ -136,6 +136,11 @@ This document tracks all explicit simplifying assumptions made throughout the ar
      $$\text{DeliveryFeePaise}(N) = \begin{cases} 3,500\text{ Paise (₹35.00)} & N = 1 \\ 1,750\text{ Paise (₹17.50, 50\% split)} & N = 2 \\ 0\text{ Paise (₹0.00, 100\% waived)} & N \ge 3 \end{cases}$$
    - Discount amount per order: $\text{DiscountPaise}(N) = \text{BaseFeePaise} - \text{DeliveryFeePaise}(N)$.
 
-4. **Relationship to Group Carts**:
-   - *Independence*: Joining a Rider Trip is independent of Group Cart membership. A customer order can attach directly to an active Rider Trip to claim a pooled delivery fee discount, or a whole Group Cart can link to a Trip. Group Carts focus on item-level shopping cart collaboration within a geofence, whereas Rider Trips focus on proactive dispatch pooling for en-route riders. Both mechanisms operate in parallel.
+4. **Relationship to Group Carts & Live Member Synchronization**:
+   - *Architecture*: A Rider Trip is a fulfillment pooling container for orders within a shared geofence (e.g. `Aravali Heights, Tower B`). Simulated active members (e.g. `Aarav Mehta`, `Priya Sharma`) represent concurrent neighborhood orders within that geofence pool.
+   - *Dynamic Link*: When a customer adds items to their Group Cart and joins the Rider Trip, their member record (`items_summary` and `order_total_paise`) is dynamically synced to Redis via `POST /api/trips/join`. Adding items to the Group Cart immediately updates the customer's member row in Screen B with their exact live items and reconciled cart total.
+
+5. **Rider ETA Continuous Simulation Loop Lifecycle**:
+   - *Behavior*: In `internal/trip/simulator.go`, `RiderSimulator` advances the rider's lat/lng position towards the dark store at 10.0x simulation speed scale.
+   - *ETA Fluctuation Rationale*: As the rider moves closer to the destination, `ETASeconds` counts down continuously ($360\text{s} \to 60\text{s} \implies 6\text{ mins} \to 1\text{ min}$). When the simulation loop finishes its run duration or auto-restarts (`AUTO_RESTART=true`), the rider resets to their starting pickup location (~1 km away), resetting `ETASeconds` back to 360s (6 mins). This is expected continuous simulation loop lifecycle behavior, not a stale cache error.
 

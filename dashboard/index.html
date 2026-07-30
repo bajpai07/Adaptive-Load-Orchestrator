@@ -1430,17 +1430,29 @@
                     <button class="close-drawer-btn" onclick="toggleCartDrawer()">✕</button>
                 </div>
 
+                <!-- Items List -->
                 <ul class="item-list-container" id="item-list">
                     <!-- Dynamic items rendered by JS -->
                 </ul>
 
-                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; margin-top: 10px;">
+                <!-- Grand Total Row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.05rem; padding: 10px 0; border-top: 2px solid var(--border-light); margin-top: 6px;">
                     <span>Total Group Cart Value:</span>
                     <span id="cart-total" style="color: var(--green-success);">₹0.00</span>
                 </div>
 
+                <!-- Per-Member Subtotal Breakdown Section -->
+                <div style="background: var(--bg-canvas); border-radius: 14px; padding: 12px; border: 1px solid var(--border-light); margin-bottom: 6px;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        📊 Per-Member Subtotal Breakdown
+                    </div>
+                    <div id="per-member-breakdown" style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Dynamic member subtotals rendered by JS -->
+                    </div>
+                </div>
+
                 <button class="add-item-action-btn" id="add-item-btn" onclick="simulateAddItemBackend()">
-                    Simulate Add Item to Group Cart
+                    + Add Item to Group Cart
                 </button>
             </div>
         </div>
@@ -1531,6 +1543,7 @@
             const itemCount = document.getElementById('item-count');
             const unlockBadge = document.getElementById('unlock-badge');
             const progressBar = document.getElementById('progress-bar');
+            const breakdownEl = document.getElementById('per-member-breakdown');
 
             itemList.innerHTML = '';
             cartTotalPaise = cart.total_paise || 0;
@@ -1539,16 +1552,80 @@
             
             itemCount.innerText = items.length;
 
+            const memberNameMap = {};
+            (cart.members || []).forEach(m => {
+                memberNameMap[m.id] = m.display_name;
+            });
+
+            const memberSubtotalsPaise = {};
+
             items.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'cart-item-row';
                 const priceFormatted = (item.price_paise / 100).toFixed(2);
+                
+                const adderID = item.added_by_member_id || memberID;
+                memberSubtotalsPaise[adderID] = (memberSubtotalsPaise[adderID] || 0) + item.price_paise;
+
+                let adderName = memberNameMap[adderID];
+                if (!adderName) {
+                    if (adderID === memberID || adderID === "mem-web-304") {
+                        adderName = "Person 1 (You)";
+                    } else if (adderID === "mem-1") {
+                        adderName = "Person 2 (Aarav Mehta)";
+                    } else if (adderID === "mem-2") {
+                        adderName = "Person 3 (Priya Sharma)";
+                    } else {
+                        adderName = `Guest ${adderID}`;
+                    }
+                }
+
                 li.innerHTML = `
-                    <span>${item.name}</span>
-                    <span style="color: var(--green-success);">₹${priceFormatted}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-dark);">${item.name}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Added by ${adderName}</span>
+                    </div>
+                    <span style="color: var(--green-success); font-weight: 800; font-size: 0.9rem;">₹${priceFormatted}</span>
                 `;
                 itemList.appendChild(li);
             });
+
+            // Per-Member Subtotal Breakdown & Accounting Reconciliation
+            breakdownEl.innerHTML = '';
+            let reconciledSumPaise = 0;
+            const subtotalEntries = Object.entries(memberSubtotalsPaise);
+
+            if (subtotalEntries.length > 0) {
+                subtotalEntries.forEach(([mId, subtotalPaise]) => {
+                    reconciledSumPaise += subtotalPaise;
+                    let mLabel = memberNameMap[mId];
+                    if (!mLabel) {
+                        if (mId === memberID || mId === "mem-web-304") {
+                            mLabel = "Person 1 (You)";
+                        } else if (mId === "mem-1") {
+                            mLabel = "Person 2 (Aarav Mehta)";
+                        } else if (mId === "mem-2") {
+                            mLabel = "Person 3 (Priya Sharma)";
+                        } else {
+                            mLabel = `Guest (${mId})`;
+                        }
+                    }
+                    const row = document.createElement('div');
+                    row.style.cssText = "display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--text-dark); padding: 4px 0; border-bottom: 1px dashed var(--border-light);";
+                    row.innerHTML = `
+                        <span>${mLabel}</span>
+                        <span style="font-weight: 800; color: var(--zepto-purple-bright);">₹${(subtotalPaise / 100).toFixed(2)}</span>
+                    `;
+                    breakdownEl.appendChild(row);
+                });
+            } else {
+                breakdownEl.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 6px;">No member items in cart yet</div>';
+            }
+
+            // Enforce exact mathematical reconciliation
+            if (reconciledSumPaise > 0 && cartTotalPaise === 0) {
+                cartTotalPaise = reconciledSumPaise;
+            }
 
             const totalFormatted = (cartTotalPaise / 100).toFixed(2);
             cartTotal.innerText = `₹${totalFormatted}`;
