@@ -50,20 +50,26 @@ Where:
 
 ## 4. Cost-Gated Decision Engine & Penalty Formulation
 
-Re-routing decisions undergo strict cost-gating to prevent unprofitable transfer costs during local store overload:
+Re-routing decisions undergo strict cost-gating ([`internal/fulfillment/costmodel.go`](file:///c:/Users/bajpa/OneDrive/Desktop/zepto/internal/fulfillment/costmodel.go)) to prevent unprofitable second-leg transport fees during local store overload:
 
-### SLA Breach Penalty Function:
-$$f(\Delta t) = \text{BaseSLAFee} + \alpha \cdot \left( \max(0, T_{\text{est}} - T_{\text{SLA}}) \right)^2$$
+### Linear SLA Breach Penalty Function:
+$$\text{SLAPenaltyPaise} = \max\left(0, t_{\text{predicted\_delay\_min}} - t_{\text{acceptable\_delay}}\right) \times \text{PenaltyPerMinPaise}$$
 
-Where:
-- $T_{\text{est}}$ = Predicted customer end-to-end residence time ($W_q + W_s$).
-- $T_{\text{SLA}}$ = SLA delivery target threshold (e.g. 10 minutes = 600s).
-- $\alpha$ = Exponential SLA penalty multiplier ($\text{Paise/sec}^2$).
+Where (exact constants in `costmodel.go`):
+- $t_{\text{acceptable\_delay}} = 1.0 \text{ minute}$
+- $\text{PenaltyPerMinPaise} = 1500 \text{ Paise/min } (₹15.00/\text{min})$
 
-### Re-Route Cost Gate Equation:
+### Second-Leg Delivery Transport Cost Function:
+$$\text{ReRouteCostPaise} = \text{BaseFeePaise} + (\text{PerKmRatePaise} \times d_{\text{km}})$$
+
+Where (exact constants in `costmodel.go`):
+- $\text{BaseFeePaise} = 2500 \text{ Paise } (₹25.00)$
+- $\text{PerKmRatePaise} = 1000 \text{ Paise/km } (₹10.00/\text{km})$
+
+### Re-Route Cost Gate Rule:
 $$\text{ReRouteDecision} = \begin{cases} 
-\text{EXECUTE} & \text{if } \text{ReRouteCost} < f(\Delta t) \text{ and } \text{TargetLoad} < 70\% \\ 
-\text{REJECT} & \text{if } \text{ReRouteCost} \ge f(\Delta t) 
+\text{EXECUTE} & \text{if } \text{ReRouteCostPaise} < \text{SLAPenaltyPaise} \text{ and } \text{TargetLoad} < 70\% \\ 
+\text{REJECT} & \text{if } \text{ReRouteCostPaise} \ge \text{SLAPenaltyPaise} 
 \end{cases}$$
 
 ---
