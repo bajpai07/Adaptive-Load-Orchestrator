@@ -1669,31 +1669,9 @@
             const etaMin = trip.eta_seconds ? Math.max(1, Math.round(trip.eta_seconds / 60)) : 6;
             
             let members = trip.members || [];
-            if (!members || members.length === 0) {
-                members = [
-                    {
-                        order_id: "ord-mem-1",
-                        member_id: "mem-1",
-                        display_name: "Aarav Mehta",
-                        flat_location: "Flat 402, Tower B",
-                        items_summary: "Amul Taaza Milk (1L), Brown Bread",
-                        order_total_paise: 18500,
-                        avatar_color: "#8B5CF6"
-                    },
-                    {
-                        order_id: "ord-mem-2",
-                        member_id: "mem-2",
-                        display_name: "Priya Sharma",
-                        flat_location: "Flat 201, Tower B",
-                        items_summary: "Lay's Chips (52g), Coca-Cola (750ml)",
-                        order_total_paise: 14000,
-                        avatar_color: "#EC4899"
-                    }
-                ];
-            }
             const currentMemberCount = members.length;
             const isUserInMembers = members.some(m => m.member_id === memberID) || hasJoinedTrip;
-            const targetCountForUser = isUserInMembers ? currentMemberCount : currentMemberCount + 1;
+            const targetCountForUser = isUserInMembers ? (currentMemberCount || 1) : currentMemberCount + 1;
 
             let userFeePaise = 3500;
             let userDiscountPaise = 0;
@@ -1722,14 +1700,16 @@
             let stripCopy = "";
             if (isUserInMembers) {
                 if (currentMemberCount === 1) {
-                    stripCopy = "1 person on trip — pay full ₹35.00 delivery fee";
+                    stripCopy = "1 member on trip — pay full ₹35.00 delivery fee";
                 } else if (currentMemberCount === 2) {
                     stripCopy = "2 members on trip — delivery fee split 50% (₹17.50 each)";
                 } else {
                     stripCopy = `${currentMemberCount} members on trip — 100% fee waived for everyone! 🎉`;
                 }
             } else {
-                if (targetCountForUser === 2) {
+                if (targetCountForUser === 1) {
+                    stripCopy = "Be the 1st member to join this trip — pay ₹35.00 delivery fee";
+                } else if (targetCountForUser === 2) {
                     stripCopy = "2nd person to join saves ₹17.50 delivery fee — split across the trip";
                 } else {
                     stripCopy = `${targetCountForUser}rd person to join saves ₹35.00 delivery fee — 100% waived across the trip`;
@@ -1758,6 +1738,12 @@
                         </li>
                     `;
                 }).join('');
+            } else {
+                memberListEl.innerHTML = `
+                    <li class="member-row" style="text-align: center; justify-content: center; color: var(--text-muted); font-size: 0.82rem; padding: 16px; background: var(--bg-canvas); border-radius: 12px; width: 100%;">
+                        No members on this trip yet. Click "Join trip" below to add your live Group Cart order!
+                    </li>
+                `;
             }
 
             // CTA Button Copy & Fee Logic
@@ -1793,8 +1779,8 @@
         async function syncTripWithLiveCart() {
             const stableOrderID = "ord-web-304";
             const stableMemberID = "mem-web-304";
-            const itemsSummaryText = liveCartItems.length > 0 ? liveCartItems.join(', ') : "Organic Eggs, Greek Yogurt";
-            const totalPaiseVal = cartTotalPaise > 0 ? cartTotalPaise : 22000;
+            const itemsSummaryText = liveCartItems.length > 0 ? liveCartItems.join(', ') : "Pending items in Group Cart";
+            const totalPaiseVal = cartTotalPaise;
 
             try {
                 const resp = await fetch("/api/trips/join", {
