@@ -1456,13 +1456,43 @@
         let cartTotalPaise = 0;
         let hasJoinedTrip = false;
         let currentTripData = null;
+        let currentCartID = "";
 
         const geofenceID = "geofence-aravali";
         const memberID = "mem-web-304";
 
-        function connectWS() {
+        async function connectWS() {
             const dot = document.getElementById('ws-dot');
             const status = document.getElementById('ws-status');
+
+            // 1. Join or get active Group Cart for geofence
+            try {
+                const resp = await fetch("/api/carts/join", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        geofence_id: geofenceID,
+                        member_id: memberID,
+                        display_name: "Vikram Kumar (Flat 304)",
+                        lat: 28.6315,
+                        lng: 77.2167,
+                        radius_meters: 500,
+                        ttl_seconds: 1800,
+                        unlock_threshold_paise: 20000
+                    })
+                });
+                if (resp.ok) {
+                    const cart = await resp.json();
+                    currentCartID = cart.id;
+                    renderCart(cart);
+                }
+            } catch (e) {
+                console.error("Cart join error:", e);
+            }
+
+            // 2. Connect WebSocket to registered route /ws/cart
+            const wsCartID = currentCartID || "cart-group-aravali";
+            const wsUrl = `${protocol}${window.location.host}/ws/cart?cart_id=${wsCartID}&member_id=${memberID}`;
 
             ws = new WebSocket(wsUrl);
 
@@ -1698,13 +1728,28 @@
             }
         }
 
-        function addItemToCart(name, pricePaise) {
-            joinRiderTrip();
+        async function addItemToCart(name, pricePaise) {
+            const targetCartID = currentCartID || "cart-group-aravali";
+            try {
+                await fetch("/api/carts/item", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cart_id: targetCartID,
+                        sku: "sku-" + Math.floor(Math.random() * 1000),
+                        name: name || "Amul Taaza Milk (1L)",
+                        price_paise: pricePaise || 7500,
+                        added_by_member_id: memberID
+                    })
+                });
+            } catch (e) {
+                console.error("Add item error:", e);
+            }
             toggleCartDrawer();
         }
 
-        function simulateAddItemBackend() {
-            joinRiderTrip();
+        async function simulateAddItemBackend() {
+            await addItemToCart("Amul Taaza Milk (1L)", 7500);
         }
 
         function openScreenB() {
