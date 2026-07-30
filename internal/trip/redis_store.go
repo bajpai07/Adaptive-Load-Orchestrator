@@ -47,11 +47,22 @@ for _, existingID in ipairs(trip.member_order_ids) do
     end
 end
 
--- Idempotency check 2: Check if member_id already exists in members array
-if not exists and targetMemberID then
+-- Idempotency check 2: Check if member_id already exists in members array & update live cart details
+if targetMemberID then
     for _, m in ipairs(trip.members) do
         if m.member_id and m.member_id == targetMemberID then
             exists = true
+            if newMember then
+                if newMember.items_summary and #newMember.items_summary > 0 then
+                    m.items_summary = newMember.items_summary
+                end
+                if newMember.order_total_paise and newMember.order_total_paise > 0 then
+                    m.order_total_paise = newMember.order_total_paise
+                end
+                if newMember.display_name and #newMember.display_name > 0 then
+                    m.display_name = newMember.display_name
+                end
+            end
             break
         end
     end
@@ -62,32 +73,30 @@ if not exists then
     if newMember then
         table.insert(trip.members, newMember)
     end
-    
-    local count = #trip.members
-    if count < #trip.member_order_ids then
-        count = #trip.member_order_ids
-    end
-    
-    local fee = baseFeePaise
-    local discount = 0
-    if count == 2 then
-        fee = math.floor(baseFeePaise / 2)
-        discount = baseFeePaise - fee
-    elseif count >= 3 then
-        fee = 0
-        discount = baseFeePaise
-    end
-    
-    trip.current_delivery_fee_paise = fee
-    trip.discount_paise = discount
-    trip.status = "POOLED"
-    
-    local updatedData = cjson.encode(trip)
-    redis.call('SET', tripKey, updatedData)
-    return updatedData
 end
 
-return tripData
+local count = #trip.members
+if count < #trip.member_order_ids then
+    count = #trip.member_order_ids
+end
+
+local fee = baseFeePaise
+local discount = 0
+if count == 2 then
+    fee = math.floor(baseFeePaise / 2)
+    discount = baseFeePaise - fee
+elseif count >= 3 then
+    fee = 0
+    discount = baseFeePaise
+end
+
+trip.current_delivery_fee_paise = fee
+trip.discount_paise = discount
+trip.status = "POOLED"
+
+local updatedData = cjson.encode(trip)
+redis.call('SET', tripKey, updatedData)
+return updatedData
 `
 
 type RedisTripStore struct {

@@ -1522,6 +1522,8 @@
             };
         }
 
+        let liveCartItems = [];
+
         function renderCart(cart) {
             if (!cart) return;
             const itemList = document.getElementById('item-list');
@@ -1533,6 +1535,7 @@
             itemList.innerHTML = '';
             cartTotalPaise = cart.total_paise || 0;
             const items = cart.items || [];
+            liveCartItems = items.map(i => i.name);
             
             itemCount.innerText = items.length;
 
@@ -1559,6 +1562,11 @@
                 unlockBadge.innerText = `Add ₹${remaining} more to unlock FREE Delivery`;
                 const pct = Math.min(100, Math.max(10, (cartTotalPaise / targetPaise) * 100));
                 progressBar.style.width = `${pct}%`;
+            }
+
+            // Sync updated cart items and total value to Rider Trip if already joined!
+            if (hasJoinedTrip) {
+                syncTripWithLiveCart();
             }
         }
 
@@ -1702,8 +1710,14 @@
             if (hasJoinedTrip) return;
             hasJoinedTrip = true;
 
+            await syncTripWithLiveCart();
+        }
+
+        async function syncTripWithLiveCart() {
             const stableOrderID = "ord-web-304";
             const stableMemberID = "mem-web-304";
+            const itemsSummaryText = liveCartItems.length > 0 ? liveCartItems.join(', ') : "Organic Eggs, Greek Yogurt";
+            const totalPaiseVal = cartTotalPaise > 0 ? cartTotalPaise : 22000;
 
             try {
                 const resp = await fetch("/api/trips/join", {
@@ -1715,8 +1729,8 @@
                         member_id: stableMemberID,
                         display_name: "Vikram Kumar",
                         flat_location: "Flat 304, Tower B",
-                        items_summary: "Organic Eggs, Greek Yogurt",
-                        order_total_paise: 22000,
+                        items_summary: itemsSummaryText,
+                        order_total_paise: totalPaiseVal,
                         avatar_color: "#10B981"
                     })
                 });
@@ -1726,8 +1740,7 @@
                     renderTripUI(trip);
                 }
             } catch (e) {
-                console.error("Join trip error:", e);
-                hasJoinedTrip = false;
+                console.error("Sync trip error:", e);
             }
         }
 
