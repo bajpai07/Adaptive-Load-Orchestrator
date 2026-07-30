@@ -1835,13 +1835,14 @@
             const stableMemberID = "mem-web-304";
             const itemsSummaryText = formatItemsSummary(liveCartItems);
             const totalPaiseVal = cartTotalPaise;
+            const targetTripID = (currentTripData && currentTripData.id) ? currentTripData.id : "trip-rider-1";
 
             try {
                 const resp = await fetch("/api/trips/join", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        trip_id: "trip-rider-1",
+                        trip_id: targetTripID,
                         order_id: stableOrderID,
                         member_id: stableMemberID,
                         display_name: "Vikram Kumar",

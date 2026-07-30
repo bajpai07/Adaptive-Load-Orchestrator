@@ -291,6 +291,13 @@ func main() {
 			json.NewEncoder(w).Encode(t)
 		})
 
+		// Purge any legacy trip keys from Redis on boot to ensure zero stale cached state
+		iter := rdb.Scan(context.Background(), 0, "trip:*", 0).Iterator()
+		for iter.Next(context.Background()) {
+			_ = rdb.Del(context.Background(), iter.Val()).Err()
+		}
+		_ = rdb.Del(context.Background(), "geofence_trip:geofence-aravali").Err()
+
 		http.HandleFunc("/api/trips/active", func(w http.ResponseWriter, r *http.Request) {
 			geofenceID := r.URL.Query().Get("geofence_id")
 			if geofenceID == "" {
@@ -299,7 +306,7 @@ func main() {
 			t, err := tripStore.GetActiveTripForGeofence(r.Context(), geofenceID)
 			if err != nil || t == nil {
 				t = &trip.Trip{
-					ID:                     "trip-rider-1",
+					ID:                     "trip-rider-v3",
 					RiderID:                "rider-1",
 					RiderName:              "Rahul Sharma",
 					GeofenceID:             geofenceID,
