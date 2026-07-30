@@ -81,18 +81,46 @@ func (s *RedisCartStore) CreateOrGetActiveCart(ctx context.Context, geofenceID s
 
 	cartID := fmt.Sprintf("cart-%s-%d", geofenceID, time.Now().UnixNano())
 	now := time.Now()
+
+	members := []Member{hostMember}
+	demoItems := make([]CartItem, 0)
+	var totalPaise int64 = 0
+
+	// Pre-seed demo members and items ONLY for the live demo geofence ("geofence-aravali")
+	if geofenceID == "geofence-aravali" {
+		demoMember1 := Member{ID: "mem-1", DisplayName: "Aarav Mehta (Flat 402)"}
+		demoMember2 := Member{ID: "mem-2", DisplayName: "Priya Sharma (Flat 201)"}
+
+		if hostMember.ID != demoMember1.ID {
+			members = append(members, demoMember1)
+		}
+		if hostMember.ID != demoMember2.ID {
+			members = append(members, demoMember2)
+		}
+
+		demoItems = []CartItem{
+			{ID: "item-seed-1", SKU: "sku-milk-1", Name: "Amul Taaza Milk (1L)", PricePaise: 7500, AddedByMemberID: "mem-1", AddedAt: now},
+			{ID: "item-seed-2", SKU: "sku-bread-1", Name: "Brown Bread", PricePaise: 4000, AddedByMemberID: "mem-1", AddedAt: now},
+			{ID: "item-seed-3", SKU: "sku-chips-1", Name: "Lay's Magic Masala (52g)", PricePaise: 2000, AddedByMemberID: "mem-2", AddedAt: now},
+			{ID: "item-seed-4", SKU: "sku-cola-1", Name: "Coca-Cola Bottle (750ml)", PricePaise: 4000, AddedByMemberID: "mem-2", AddedAt: now},
+		}
+		totalPaise = 17500
+	}
+
+	unlocked := totalPaise >= unlockThresholdPaise
+
 	cart := &GroupCart{
 		ID:                   cartID,
 		GeofenceID:           geofenceID,
 		GeofenceCentroid:     centroid,
 		GeofenceRadiusMeters: radiusMeters,
-		Members:              []Member{hostMember},
-		Items:                make([]CartItem, 0),
+		Members:              members,
+		Items:                demoItems,
 		CreatedAt:            now,
 		ExpiresAt:            now.Add(ttl),
 		UnlockThresholdPaise: unlockThresholdPaise,
-		Unlocked:             false,
-		TotalPaise:           0,
+		Unlocked:             unlocked,
+		TotalPaise:           totalPaise,
 		Status:               CartStatusActive,
 	}
 

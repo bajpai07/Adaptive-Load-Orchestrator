@@ -92,6 +92,27 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 					riderName = "Rahul Sharma"
 				}
 
+				initialMembers := []TripMember{
+					{
+						OrderID:         "ord-mem-1",
+						MemberID:        "mem-1",
+						DisplayName:     "Aarav Mehta",
+						FlatLocation:    "Flat 402, Tower B",
+						ItemsSummary:    "Amul Taaza Milk (1L), Brown Bread",
+						OrderTotalPaise: 18500,
+						AvatarColor:     "#8B5CF6",
+					},
+					{
+						OrderID:         "ord-mem-2",
+						MemberID:        "mem-2",
+						DisplayName:     "Priya Sharma",
+						FlatLocation:    "Flat 201, Tower B",
+						ItemsSummary:    "Lay's Chips (52g), Coca-Cola (750ml)",
+						OrderTotalPaise: 14000,
+						AvatarColor:     "#EC4899",
+					},
+				}
+
 				newTrip := &Trip{
 					ID:                      tripID,
 					RiderID:                 r.ID,
@@ -99,13 +120,13 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 					GeofenceID:              r.DestinationGeofenceID,
 					GeofenceName:            "Aravali Heights, Tower B",
 					AssignedOrderCount:      len(r.AssignedOrderIDs),
-					MemberOrderIDs:          []string{},
-					Members:                 []TripMember{},
+					MemberOrderIDs:          []string{"ord-mem-1", "ord-mem-2"},
+					Members:                 initialMembers,
 					BaseDeliveryFeePaise:    3500, // ₹35.00 Base Delivery Fee
-					CurrentDeliveryFeePaise: 3500,
-					DiscountPaise:           0,
+					CurrentDeliveryFeePaise: 1750, // 50% split for 2 members
+					DiscountPaise:           1750,
 					ETASeconds:              etaSec,
-					Status:                  TripStatusAvailable,
+					Status:                  TripStatusPooled,
 					CreatedAt:               time.Now(),
 					UpdatedAt:               time.Now(),
 				}
