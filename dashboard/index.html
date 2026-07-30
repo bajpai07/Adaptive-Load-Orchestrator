@@ -1008,6 +1008,82 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.15);
         }
 
+        /* 11. Interactive Press Feedback & Polish */
+        button:active, 
+        .product-card:active, 
+        .add-item-btn-overlay:active, 
+        .rider-banner-card:active, 
+        .mode-tab:active, 
+        .offer-coupon-card:active, 
+        .category-pill:active {
+            transform: scale(0.96);
+            transition: transform 0.1s ease;
+        }
+
+        /* Quantity Stepper Active Morph */
+        .add-item-btn-overlay.stepper-active {
+            width: auto;
+            min-width: 76px;
+            height: 32px;
+            border-radius: 99px;
+            padding: 0 8px;
+            background: var(--zepto-purple-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(59, 11, 103, 0.4);
+            cursor: default;
+        }
+
+        /* Toast / Snackbar Notifications System */
+        .toast-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .toast-message {
+            background: rgba(59, 11, 103, 0.95);
+            color: #FFFFFF;
+            backdrop-filter: blur(8px);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.15);
+            animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes toastSlideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Skeleton Pulse Loading State */
+        @keyframes skeleton-pulse {
+            0% { background-color: rgba(220, 220, 230, 0.6); }
+            50% { background-color: rgba(240, 240, 250, 0.9); }
+            100% { background-color: rgba(220, 220, 230, 0.6); }
+        }
+
+        .skeleton-box {
+            animation: skeleton-pulse 1.4s ease-in-out infinite;
+            border-radius: 8px;
+        }
+
         /* 11. Group Cart Drawer / Modal */
         .cart-drawer-overlay {
             position: fixed;
@@ -1245,7 +1321,7 @@
 
         <div class="product-grid">
             <!-- Product 1: Milk -->
-            <div class="product-card">
+            <div class="product-card" data-product-name="Amul Taaza Milk (1L)" data-product-price="7500">
                 <div class="product-img-wrapper">
                     <img src="images/milk.png" alt="Amul Taaza Milk">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Taaza Milk (1L)', 7500)">+</div>
@@ -1262,7 +1338,7 @@
             </div>
 
             <!-- Product 2: Eggs -->
-            <div class="product-card">
+            <div class="product-card" data-product-name="Farm Fresh Eggs (6-pack)" data-product-price="6500">
                 <div class="product-img-wrapper">
                     <img src="images/eggs.png" alt="Farm Fresh Eggs">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Farm Fresh Eggs (6-pack)', 6500)">+</div>
@@ -1279,7 +1355,7 @@
             </div>
 
             <!-- Product 3: Chips -->
-            <div class="product-card">
+            <div class="product-card" data-product-name="Lay's Magic Masala (52g)" data-product-price="2000">
                 <div class="product-img-wrapper">
                     <img src="images/chips.png" alt="Lay's Chips">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Lay\'s Magic Masala (52g)', 2000)">+</div>
@@ -1296,7 +1372,7 @@
             </div>
 
             <!-- Product 4: Dahi -->
-            <div class="product-card">
+            <div class="product-card" data-product-name="Amul Masti Dahi (400g)" data-product-price="4500">
                 <div class="product-img-wrapper">
                     <img src="images/dahi.png" alt="Amul Masti Dahi">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Masti Dahi (400g)', 4500)">+</div>
@@ -1313,7 +1389,7 @@
             </div>
 
             <!-- Product 5: Coca-Cola -->
-            <div class="product-card">
+            <div class="product-card" data-product-name="Coca-Cola Bottle (750ml)" data-product-price="4000">
                 <div class="product-img-wrapper">
                     <img src="images/cola.png" alt="Coca-Cola Bottle">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Coca-Cola Bottle (750ml)', 4000)">+</div>
@@ -1329,6 +1405,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- Toast Notifications System Container -->
+        <div class="toast-container" id="toast-container"></div>
 
         <!-- 7. ₹0 FEES Promotional Block -->
         <section class="fees-promo-card">
@@ -1676,6 +1755,8 @@
                 progressBar.style.width = `${pct}%`;
             }
 
+            updateProductSteppers();
+
             // Sync updated cart items and total value to Rider Trip if already joined!
             if (hasJoinedTrip) {
                 syncTripWithLiveCart();
@@ -1823,10 +1904,55 @@
                 .join(', ');
         }
 
+        function showToast(message, icon = "✓") {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.innerHTML = `<span style="color: var(--zepto-lime); font-size: 0.9rem;">${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.25s ease';
+                setTimeout(() => toast.remove(), 250);
+            }, 2200);
+        }
+
+        function updateProductSteppers() {
+            const counts = {};
+            liveCartItems.forEach(name => {
+                counts[name] = (counts[name] || 0) + 1;
+            });
+
+            document.querySelectorAll('.product-card').forEach(card => {
+                const pName = card.dataset.productName;
+                const pPrice = parseInt(card.dataset.productPrice);
+                if (!pName) return;
+
+                const qty = counts[pName] || 0;
+                const overlay = card.querySelector('.add-item-btn-overlay');
+
+                if (overlay) {
+                    if (qty > 0) {
+                        overlay.classList.add('stepper-active');
+                        overlay.innerHTML = `
+                            <span onclick="event.stopPropagation(); addItemToCart('${pName}', ${pPrice})" style="cursor: pointer; padding: 0 4px;">+</span>
+                            <span style="font-weight: 800; font-size: 0.85rem; color: #FFFFFF;">${qty} in cart</span>
+                        `;
+                    } else {
+                        overlay.classList.remove('stepper-active');
+                        overlay.innerHTML = `+`;
+                    }
+                }
+            });
+        }
+
         async function joinRiderTrip() {
             if (hasJoinedTrip) return;
             hasJoinedTrip = true;
 
+            showToast("You joined Rahul Sharma's trip — saved ₹35.00!", "⚡");
             await syncTripWithLiveCart();
         }
 
@@ -1880,6 +2006,7 @@
                     const data = await resp.json();
                     if (data && data.cart) {
                         renderCart(data.cart);
+                        showToast(`Added ${name} to cart`, "✓");
                     }
                 }
             } catch (e) {
