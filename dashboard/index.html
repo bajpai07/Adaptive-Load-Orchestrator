@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zepto — Rider Group Delivery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zepto — 10 Minute Delivery & Group Cart</title>
     <!-- Google Fonts for Zepto Brand Aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -15,16 +15,20 @@
             --zepto-purple-main: #3B0B67;
             --zepto-purple-bright: #5B1793;
             --zepto-purple-light: #F4ECFC;
+            --zepto-pink-accent: #E11D48;
             --zepto-lime: #C6FF3B;
-            --zepto-lime-glow: rgba(198, 255, 59, 0.4);
-            --bg-cream: #FAF7F2;
+            --zepto-lime-glow: rgba(198, 255, 59, 0.3);
+            --bg-canvas: #F5F3F7;
             --card-bg: #FFFFFF;
             --text-dark: #1C1023;
             --text-muted: #6C5C77;
             --border-light: #EFE9F4;
             --green-success: #10B981;
             --green-light: #ECFDF5;
+            --green-border: #A7F3D0;
             --orange-avatar: #F97316;
+            --shadow-subtle: 0 4px 16px rgba(32, 11, 59, 0.06);
+            --shadow-float: 0 8px 30px rgba(32, 11, 59, 0.12);
         }
 
         * {
@@ -34,333 +38,840 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-cream);
+            background-color: var(--bg-canvas);
             color: var(--text-dark);
             margin: 0;
             padding: 0;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
         }
 
-        /* Top Brand Navigation Bar */
-        .navbar {
-            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 50%, var(--zepto-purple-bright) 100%);
+        /* App Main Shell Container */
+        .app-shell {
+            width: 100%;
+            max-width: 520px;
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+            padding-bottom: 140px; /* Space for sticky bottom bars */
+        }
+
+        /* 1. Header Section */
+        .header-container {
+            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 60%, var(--zepto-purple-bright) 100%);
             color: #FFFFFF;
-            padding: 14px 20px;
-            box-shadow: 0 4px 20px rgba(59, 11, 103, 0.15);
+            padding: 16px 16px 12px 16px;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 20px rgba(32, 11, 59, 0.2);
         }
 
-        .navbar-inner {
-            max-width: 600px;
-            margin: 0 auto;
+        /* Location Row */
+        .header-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 12px;
         }
 
-        .brand-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .zepto-badge {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 4px 10px;
-            border-radius: 99px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #FFFFFF;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .speed-pill {
-            background: var(--zepto-lime);
-            color: var(--text-dark);
-            font-weight: 800;
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-
-        .location-row {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 500;
-        }
-
-        .ws-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.25);
-            padding: 4px 10px;
-            border-radius: 99px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #FF4D4D;
-            display: inline-block;
-        }
-        .dot.connected {
-            background: var(--zepto-lime);
-            box-shadow: 0 0 8px var(--zepto-lime);
-        }
-
-        /* App View Container */
-        .app-view {
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 16px;
-            flex-grow: 1;
+        .location-block {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 2px;
         }
 
-        /* Search Bar Component */
-        .search-container {
-            position: relative;
-        }
-        .search-input {
-            width: 100%;
-            background: #FFFFFF;
-            border: 1px solid var(--border-light);
-            border-radius: 16px;
-            padding: 12px 16px 12px 42px;
-            font-size: 0.9rem;
+        .delivery-eta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 900;
             color: var(--text-dark);
-            outline: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            background: var(--zepto-lime);
+            padding: 2px 8px;
+            border-radius: 99px;
+            width: fit-content;
+            letter-spacing: 0.5px;
         }
+
+        .address-text {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .address-text span.chevron {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .profile-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        /* Mode Tabs Row */
+        .store-mode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mode-tab {
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-tab.active {
+            background: #FFFFFF;
+            color: var(--zepto-purple-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .mode-tab.outlined {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Search Bar Row */
+        .search-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            flex: 1;
+            background: #FFFFFF;
+            border-radius: 99px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
         .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
             font-size: 1rem;
             color: var(--text-muted);
         }
 
-        /* SCREEN A: Discovery Banner Card */
-        .banner-card {
-            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 100%);
+        .search-input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            background: transparent;
+        }
+
+        .promo-chip {
+            background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
             color: #FFFFFF;
-            border-radius: 20px;
-            padding: 18px 20px;
-            box-shadow: 0 10px 30px rgba(59, 11, 103, 0.2);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(255, 94, 98, 0.3);
+        }
+
+        /* 2. Category Icon Row (Scrollable) */
+        .category-scroll-bar {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border-light);
+            scrollbar-width: none;
+        }
+
+        .category-scroll-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-canvas);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-pill.active {
+            background: var(--zepto-purple-light);
+            color: var(--zepto-purple-bright);
+            font-weight: 700;
+            border: 1px solid var(--zepto-purple-bright);
+        }
+
+        .category-pill.highlight-deal {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            color: #047857;
+            border: 1px solid #10B981;
+            font-weight: 700;
+        }
+
+        /* 3. Discovery Rider Banner (Screen A) */
+        .discovery-banner-wrapper {
+            padding: 16px 16px 8px 16px;
+        }
+
+        .rider-banner-card {
+            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 60%, var(--zepto-purple-bright) 100%);
+            border-radius: 18px;
+            padding: 16px;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-float);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease;
+        }
+
+        .rider-banner-card:active {
+            transform: scale(0.98);
+        }
+
+        .rider-banner-left {
             display: flex;
             align-items: center;
             gap: 14px;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .banner-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 36px rgba(59, 11, 103, 0.3);
-        }
-        .banner-rider-badge {
+
+        .rider-icon-badge {
             width: 48px;
             height: 48px;
-            background: rgba(198, 255, 59, 0.2);
-            border: 1px solid var(--zepto-lime);
-            border-radius: 16px;
+            border-radius: 14px;
+            background: var(--green-success);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             flex-shrink: 0;
         }
-        .banner-content {
-            flex-grow: 1;
+
+        .rider-banner-info h3 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #FFFFFF;
         }
-        .banner-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.02rem;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 3px;
+
+        .rider-banner-info p {
+            margin: 0;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
         }
-        .banner-subtitle {
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        .banner-arrow-btn {
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.15);
+
+        .arrow-circle-btn {
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
+            background: #FFFFFF;
+            color: var(--zepto-purple-main);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 900;
             font-size: 1.1rem;
-            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             flex-shrink: 0;
         }
 
-        /* Product Grid Section */
-        .section-heading {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin: 10px 0 6px 0;
-            color: var(--text-dark);
-        }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-        .product-card {
-            background: #FFFFFF;
-            border-radius: 16px;
-            padding: 12px;
-            border: 1px solid var(--border-light);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .product-img {
-            font-size: 2.2rem;
-            text-align: center;
-            padding: 10px 0;
-        }
-        .product-name {
-            font-size: 0.8rem;
-            font-weight: 600;
-            line-height: 1.2;
-            height: 2.4em;
-            overflow: hidden;
-        }
-        .product-price-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 4px;
-        }
-        .product-price {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 0.88rem;
-        }
-        .btn-add-item {
-            background: var(--zepto-purple-light);
-            color: var(--zepto-purple-main);
-            border: 1px solid var(--zepto-purple-bright);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 8px;
-            cursor: pointer;
+        /* 4. Full-Width Promotional Banner Section */
+        .promo-section {
+            padding: 8px 16px 16px 16px;
         }
 
-        /* SCREEN B: Join Trip Detail Screen */
-        .back-nav {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--zepto-purple-main);
-            font-weight: 600;
-            font-size: 0.88rem;
-            cursor: pointer;
-            margin-bottom: 4px;
-        }
-        .detail-header-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin: 0 0 2px 0;
-        }
-        .detail-header-sub {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        /* Elevated White Rider Card */
-        .rider-card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            padding: 18px 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-            border: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .rider-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .rider-avatar {
-            width: 48px;
-            height: 48px;
-            background: var(--orange-avatar);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
+        .fest-banner-card {
+            background: linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%);
+            border-radius: 18px;
+            padding: 16px;
             color: #FFFFFF;
+            box-shadow: var(--shadow-subtle);
         }
-        .rider-name {
+
+        .fest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fest-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
             font-size: 1.05rem;
-            margin-bottom: 2px;
-        }
-        .rider-orders-sub {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        .rider-eta-box {
-            text-align: right;
-        }
-        .eta-number {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--zepto-purple-main);
-            line-height: 1;
-        }
-        .eta-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: var(--text-muted);
+            font-weight: 800;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
-        /* Dashed Discount Strip */
-        .discount-strip {
-            background: var(--green-light);
-            border: 1.5px dashed var(--green-success);
-            border-radius: 16px;
-            padding: 14px 16px;
+        .fest-badge {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .sub-tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .sub-tile {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .sub-tile-icon {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .sub-tile-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        /* 5. Offers For You Scroll */
+        .offers-scroll-bar {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px 16px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .offers-scroll-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .offer-coupon-card {
+            min-width: 220px;
+            background: #FFFFFF;
+            border: 1px dashed var(--zepto-purple-bright);
+            border-radius: 14px;
+            padding: 12px;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 0.85rem;
-            color: #065F46;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .coupon-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--zepto-purple-light);
+            color: var(--zepto-purple-bright);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .coupon-text h4 {
+            margin: 0 0 2px 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .coupon-text p {
+            margin: 0;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* 6. Product Grid */
+        .section-header {
+            padding: 0 16px 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            padding: 0 16px 20px 16px;
+        }
+
+        @media (min-width: 480px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .product-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: var(--shadow-subtle);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-float);
+        }
+
+        .product-img-wrapper {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #FAFAFA;
+            position: relative;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-img-wrapper img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .add-item-btn-overlay {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            border: 1.5px solid var(--green-success);
+            color: var(--green-success);
+            font-size: 1.2rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-item-btn-overlay:hover {
+            background: var(--green-success);
+            color: #FFFFFF;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pack-size {
+            font-size: 0.7rem;
             font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .product-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.3;
+            height: 2.6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .current-price {
+            font-size: 0.92rem;
+            font-weight: 900;
+            color: var(--green-success);
+        }
+
+        .original-price {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .discount-off-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--green-success);
+            background: var(--green-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+
+        /* 7. ₹0 FEES Section */
+        .fees-promo-card {
+            margin: 0 16px 20px 16px;
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            border: 1px solid var(--green-border);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .fees-promo-title {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #065F46;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fees-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .fee-item {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #047857;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fees-disclaimer {
+            font-size: 0.65rem;
+            color: #047857;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        /* 8. Sticky Bottom Progress Bar (Unlock Free Delivery) */
+        .sticky-progress-bar-container {
+            position: fixed;
+            bottom: 60px; /* Above bottom nav */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 520px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-light);
+            padding: 10px 16px;
+            z-index: 90;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
+        }
+
+        .progress-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .progress-track {
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 40%;
+            background: var(--green-success);
+            border-radius: 99px;
+            transition: width 0.3s ease;
+        }
+
+        .trip-shortcut-link {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--zepto-purple-bright);
+            background: var(--zepto-purple-light);
+            padding: 6px 12px;
+            border-radius: 99px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* 9. Persistent Bottom Nav Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 520px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-light);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 8px 0;
+            z-index: 100;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--zepto-purple-bright);
+            font-weight: 800;
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: -2px;
+            right: 24%;
+            background: var(--zepto-pink-accent);
+            color: #FFFFFF;
+            font-size: 0.6rem;
+            font-weight: 900;
+            padding: 1px 5px;
+            border-radius: 99px;
+        }
+
+        /* 10. Screen B Overlay / Modal (Rider Group Delivery Detail View) */
+        .overlay-screen {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 100%;
+            max-width: 520px;
+            height: 100vh;
+            background: var(--bg-canvas);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+        }
+
+        .overlay-screen.open {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .overlay-header {
+            background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 60%, var(--zepto-purple-bright) 100%);
+            color: #FFFFFF;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #FFFFFF;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .overlay-title h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .overlay-title p {
+            margin: 0;
+            font-size: 0.75rem;
+            opacity: 0.85;
+        }
+
+        .overlay-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Screen B Rider Card */
+        .rider-detail-card {
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rider-detail-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rider-avatar-large {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--orange-avatar);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .rider-detail-info h4 {
+            margin: 0 0 2px 0;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .rider-detail-info p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .rider-eta-block {
+            text-align: right;
+        }
+
+        .eta-num {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--zepto-purple-bright);
+            line-height: 1;
+        }
+
+        .eta-lbl {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Dashed Discount Strip */
+        .dashed-discount-strip {
+            background: var(--green-light);
+            border: 1.5px dashed var(--green-border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #065F46;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.3;
         }
 
         /* Member List Section */
@@ -368,318 +879,654 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 8px;
+            margin-bottom: 8px;
         }
-        .member-count-pill {
+
+        .member-section-header h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .member-badge {
             background: var(--zepto-purple-light);
-            color: var(--zepto-purple-main);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 3px 10px;
+            color: var(--zepto-purple-bright);
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 8px;
             border-radius: 99px;
         }
-        .member-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+
+        .member-list-ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
+
         .member-row {
             background: #FFFFFF;
-            border-radius: 16px;
-            padding: 14px 16px;
+            border-radius: 14px;
+            padding: 12px;
             border: 1px solid var(--border-light);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
         }
+
         .member-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
+
         .member-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #FFFFFF;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.85rem;
-            flex-shrink: 0;
         }
+
         .member-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 2px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-dark);
         }
+
         .member-flat {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
         }
+
         .member-items {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--zepto-purple-bright);
-            margin-top: 2px;
-            font-weight: 500;
-        }
-        .member-price {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--text-dark);
-            text-align: right;
+            font-weight: 600;
         }
 
-        /* Bottom Sticky CTA Bar */
-        .sticky-cta-bar {
+        .member-price {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        /* Screen B Sticky Bottom CTA */
+        .screen-b-sticky-cta {
             position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
-            background: #FFFFFF;
-            border-top: 1px solid var(--border-light);
-            padding: 14px 16px;
-            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
-            z-index: 99;
-        }
-        .cta-inner {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .btn-join-cta {
+            left: 50%;
+            transform: translateX(-50%);
             width: 100%;
-            background: var(--zepto-lime);
-            color: var(--text-dark);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            padding: 16px;
-            border: none;
-            border-radius: 18px;
-            cursor: pointer;
-            box-shadow: 0 8px 24px var(--zepto-lime-glow);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-        .btn-join-cta:hover {
-            transform: translateY(-2px);
-        }
-        .btn-join-cta.joined {
-            background: #10B981;
-            color: #FFFFFF;
-        }
-        .savings-highlight {
-            color: #064E3B;
-            font-weight: 800;
+            max-width: 520px;
+            background: #FFFFFF;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-light);
+            z-index: 30;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         }
 
-        /* Screen visibility toggles */
-        .screen { display: none; }
-        .screen.active { display: flex; flex-direction: column; gap: 16px; }
+        .cta-btn-large {
+            width: 100%;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: #FFFFFF;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .cta-btn-large.joined {
+            background: var(--zepto-purple-main);
+            box-shadow: 0 4px 14px rgba(59, 11, 103, 0.3);
+        }
+
+        /* 11. Group Cart Drawer / Modal */
+        .cart-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 100%;
+            max-width: 520px;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 180;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cart-drawer-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .cart-drawer-content {
+            background: #FFFFFF;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cart-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 12px;
+        }
+
+        .cart-drawer-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-drawer-btn {
+            background: var(--bg-canvas);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* WebSocket Status Pill */
+        .ws-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--zepto-purple-light);
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--zepto-purple-bright);
+        }
+
+        .ws-dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10B981;
+        }
+
+        /* Cart Items List */
+        .item-list-container {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-canvas);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .add-item-action-btn {
+            background: linear-gradient(135deg, var(--zepto-purple-bright) 0%, var(--zepto-purple-main) 100%);
+            color: #FFFFFF;
+            border: none;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(91, 23, 147, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Edge-to-Edge Navigation Bar -->
-    <nav class="navbar">
-        <div class="navbar-inner">
-            <div class="brand-group">
-                <div class="zepto-badge">
-                    <span>zepto</span>
-                    <span class="speed-pill">10 MINS</span>
+    <!-- Main Mobile Shell Container -->
+    <div class="app-shell">
+
+        <!-- 1. Header Section -->
+        <header class="header-container">
+            <div class="header-top-row">
+                <div class="location-block">
+                    <div class="delivery-eta-tag">
+                        <span>⚡ 14 MINS</span>
+                    </div>
+                    <div class="address-text">
+                        <span>📍 Aravali Heights, Tower B</span>
+                        <span class="chevron">▼</span>
+                    </div>
                 </div>
-                <div class="location-row">
-                    <span>📍 Aravali Heights, Tower B</span>
-                    <span style="font-size: 0.65rem;">▼</span>
+                <div class="profile-btn" onclick="toggleCartDrawer()">
+                    👤
                 </div>
             </div>
-            <div class="ws-status-pill">
-                <span id="ws-dot" class="dot"></span>
-                <span id="ws-status">Disconnected</span>
+
+            <!-- Mode Tabs Row -->
+            <div class="store-mode-tabs">
+                <div class="mode-tab active">zepto</div>
+                <div class="mode-tab outlined">Monsoon Store</div>
+                <div class="mode-tab outlined">Fresh</div>
+            </div>
+
+            <!-- Search Bar Row -->
+            <div class="search-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search for 'milk', 'chips', 'eggs'...">
+                </div>
+                <div class="promo-chip" onclick="openScreenB()">
+                    <span>🎉 Group Savings</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. Horizontally Scrollable Category Bar -->
+        <nav class="category-scroll-bar">
+            <div class="category-pill active">All</div>
+            <div class="category-pill highlight-deal" onclick="openScreenB()">⚡ Group Deals</div>
+            <div class="category-pill">Fresh & Dairy</div>
+            <div class="category-pill">Snacks & Drinks</div>
+            <div class="category-pill">Electronics</div>
+            <div class="category-pill">Pooja</div>
+        </nav>
+
+        <!-- 3. Screen A — Home Rider Group Delivery Discovery Banner -->
+        <section class="discovery-banner-wrapper">
+            <div class="rider-banner-card" id="home-rider-banner" onclick="openScreenB()">
+                <div class="rider-banner-left">
+                    <div class="rider-icon-badge">🛵</div>
+                    <div class="rider-banner-info">
+                        <h3>Rider <span id="home-rider-name">Rahul Sharma</span> is <span id="home-rider-eta">6</span> mins away</h3>
+                        <p>Join his trip — <span id="home-member-count">2</span> neighbours already in</p>
+                    </div>
+                </div>
+                <div class="arrow-circle-btn">→</div>
+            </div>
+        </section>
+
+        <!-- 4. Full-Width Promotional Banner Section -->
+        <section class="promo-section">
+            <div class="fest-banner-card">
+                <div class="fest-header">
+                    <div class="fest-title">⚡ GROUP SAVINGS FESTIVAL</div>
+                    <div class="fest-badge">LIVE NEAR YOU</div>
+                </div>
+                <div class="sub-tiles-grid">
+                    <div class="sub-tile" onclick="openScreenB()">
+                        <div class="sub-tile-icon">🛵</div>
+                        <div class="sub-tile-label">Join Rider Trip</div>
+                    </div>
+                    <div class="sub-tile" onclick="toggleCartDrawer()">
+                        <div class="sub-tile-icon">🛒</div>
+                        <div class="sub-tile-label">Group Cart</div>
+                    </div>
+                    <div class="sub-tile" onclick="openScreenB()">
+                        <div class="sub-tile-icon">📍</div>
+                        <div class="sub-tile-label">Tower B Pool</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Offers For You Scroll -->
+        <div class="offers-scroll-bar">
+            <div class="offer-coupon-card" onclick="openScreenB()">
+                <div class="coupon-icon">🎉</div>
+                <div class="coupon-text">
+                    <h4>Rider Trip Waiver</h4>
+                    <p>100% FREE Delivery on 3+ members</p>
+                </div>
+            </div>
+            <div class="offer-coupon-card" onclick="toggleCartDrawer()">
+                <div class="coupon-icon">⚡</div>
+                <div class="coupon-text">
+                    <h4>Group Cart Nudge</h4>
+                    <p>Save picking cost during peak load</p>
+                </div>
+            </div>
+            <div class="offer-coupon-card">
+                <div class="coupon-icon">✓</div>
+                <div class="coupon-text">
+                    <h4>₹0 Surge Fees</h4>
+                    <p>No rain or handling charges</p>
+                </div>
             </div>
         </div>
-    </nav>
 
-    <!-- Main Container -->
-    <div class="app-view">
+        <!-- 6. Product Grid -->
+        <section class="section-header">
+            <h2 class="section-title">Fresh & Popular Items</h2>
+        </section>
 
-        <!-- SCREEN A: HOME VIEW (DISCOVERY) -->
-        <div id="screen-home" class="screen active">
-            <!-- Search Bar -->
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="Search for 'milk', 'chips', 'eggs'..." readonly>
+        <div class="product-grid">
+            <!-- Product 1: Milk -->
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="images/milk.png" alt="Amul Taaza Milk">
+                    <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Taaza Milk (1L)', 7500)">+</div>
+                </div>
+                <div class="product-details">
+                    <span class="pack-size">1 L</span>
+                    <div class="product-name">Amul Taaza T-Special Fresh Milk</div>
+                    <div class="price-row">
+                        <span class="current-price">₹75</span>
+                        <span class="original-price">₹85</span>
+                    </div>
+                    <span class="discount-off-badge">₹10 OFF</span>
+                </div>
             </div>
 
-            <!-- Home Discovery Banner Card -->
-            <div id="home-rider-banner" class="banner-card" onclick="showScreen('detail')">
-                <div class="banner-rider-badge">🛵</div>
-                <div class="banner-content">
-                    <div class="banner-title">
-                        Rider <span id="home-rider-name">Rahul Sharma</span> is <span id="home-rider-eta">6</span> mins from your building
-                    </div>
-                    <div class="banner-subtitle">
-                        Join his trip — <span id="home-member-count">2</span> neighbours already in
-                    </div>
+            <!-- Product 2: Eggs -->
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="images/eggs.png" alt="Farm Fresh Eggs">
+                    <div class="add-item-btn-overlay" onclick="addItemToCart('Farm Fresh Eggs (6-pack)', 6500)">+</div>
                 </div>
-                <div class="banner-arrow-btn">→</div>
+                <div class="product-details">
+                    <span class="pack-size">6 pack</span>
+                    <div class="product-name">Farm Fresh Brown Organic Eggs</div>
+                    <div class="price-row">
+                        <span class="current-price">₹65</span>
+                        <span class="original-price">₹75</span>
+                    </div>
+                    <span class="discount-off-badge">₹10 OFF</span>
+                </div>
             </div>
 
-            <!-- Product Grid -->
-            <div>
-                <div class="section-heading">Fresh & Dairy</div>
-                <div class="product-grid">
-                    <div class="product-card">
-                        <div class="product-img">🥛</div>
-                        <div class="product-name">Amul Taaza Toned Milk (1L)</div>
-                        <div class="product-price-row">
-                            <span class="product-price">₹75.00</span>
-                            <button class="btn-add-item" onclick="addItemToCart('Amul Taaza Milk (1L)', 7500)">+ ADD</button>
-                        </div>
-                    </div>
-                    <div class="product-card">
-                        <div class="product-img">🥚</div>
-                        <div class="product-name">Organic Eggs (6-pack)</div>
-                        <div class="product-price-row">
-                            <span class="product-price">₹65.00</span>
-                            <button class="btn-add-item" onclick="addItemToCart('Organic Eggs (6-pack)', 6500)">+ ADD</button>
-                        </div>
-                    </div>
-                    <div class="product-card">
-                        <div class="product-img">🥣</div>
-                        <div class="product-name">Country Delight Dahi (400g)</div>
-                        <div class="product-price-row">
-                            <span class="product-price">₹45.00</span>
-                            <button class="btn-add-item" onclick="addItemToCart('Country Delight Dahi (400g)', 4500)">+ ADD</button>
-                        </div>
-                    </div>
+            <!-- Product 3: Chips -->
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="images/chips.png" alt="Lay's Chips">
+                    <div class="add-item-btn-overlay" onclick="addItemToCart('Lay\'s Magic Masala (52g)', 2000)">+</div>
                 </div>
+                <div class="product-details">
+                    <span class="pack-size">52 g</span>
+                    <div class="product-name">Lay's India's Magic Masala Chips</div>
+                    <div class="price-row">
+                        <span class="current-price">₹20</span>
+                        <span class="original-price">₹25</span>
+                    </div>
+                    <span class="discount-off-badge">₹5 OFF</span>
+                </div>
+            </div>
 
-                <div class="section-heading">Snacks & Drinks</div>
-                <div class="product-grid">
-                    <div class="product-card">
-                        <div class="product-img">🥔</div>
-                        <div class="product-name">Lay's Magic Masala (52g)</div>
-                        <div class="product-price-row">
-                            <span class="product-price">₹20.00</span>
-                            <button class="btn-add-item" onclick="addItemToCart('Lay\'s Magic Masala', 2000)">+ ADD</button>
-                        </div>
+            <!-- Product 4: Dahi -->
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="images/dahi.png" alt="Amul Masti Dahi">
+                    <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Masti Dahi (400g)', 4500)">+</div>
+                </div>
+                <div class="product-details">
+                    <span class="pack-size">400 g</span>
+                    <div class="product-name">Amul Masti Pouch Fresh Curd Dahi</div>
+                    <div class="price-row">
+                        <span class="current-price">₹45</span>
+                        <span class="original-price">₹50</span>
                     </div>
-                    <div class="product-card">
-                        <div class="product-img">🥤</div>
-                        <div class="product-name">Coca-Cola Drink (750ml)</div>
-                        <div class="product-price-row">
-                            <span class="product-price">₹40.00</span>
-                            <button class="btn-add-item" onclick="addItemToCart('Coca-Cola (750ml)', 4000)">+ ADD</button>
-                        </div>
+                    <span class="discount-off-badge">₹5 OFF</span>
+                </div>
+            </div>
+
+            <!-- Product 5: Coca-Cola -->
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="images/cola.png" alt="Coca-Cola Bottle">
+                    <div class="add-item-btn-overlay" onclick="addItemToCart('Coca-Cola Bottle (750ml)', 4000)">+</div>
+                </div>
+                <div class="product-details">
+                    <span class="pack-size">750 ml</span>
+                    <div class="product-name">Coca-Cola Soft Drink Bottle</div>
+                    <div class="price-row">
+                        <span class="current-price">₹40</span>
+                        <span class="original-price">₹45</span>
                     </div>
+                    <span class="discount-off-badge">₹5 OFF</span>
                 </div>
             </div>
         </div>
 
-        <!-- SCREEN B: JOIN TRIP DETAIL VIEW -->
-        <div id="screen-detail" class="screen" style="padding-bottom: 90px;">
-            <!-- Top Navigation & Title -->
-            <div>
-                <div class="back-nav" onclick="showScreen('home')">← Group Delivery</div>
-                <div class="detail-header-title">Ride with <span id="detail-rider-name">Rahul Sharma</span>'s trip</div>
-                <div id="detail-geofence-name" class="detail-header-sub">Aravali Heights, Tower B</div>
+        <!-- 7. ₹0 FEES Promotional Block -->
+        <section class="fees-promo-card">
+            <div class="fees-promo-title">🎉 ₹0 FEES ON GROUP ORDERS</div>
+            <div class="fees-list">
+                <div class="fee-item">✓ ₹0 Handling Fee</div>
+                <div class="fee-item">✓ ₹0 Delivery Fee* (Joined Trip or Order ≥ ₹200)</div>
+                <div class="fee-item">✓ ₹0 Rain & Surge Fee</div>
+            </div>
+            <div class="fees-disclaimer">*T&C Apply. Valid for Aravali Heights group orders.</div>
+        </section>
+
+        <!-- 8. Sticky Progress Bar (Unlock Free Delivery) -->
+        <div class="sticky-progress-bar-container">
+            <div class="progress-bar-inner">
+                <div class="progress-info">
+                    <span>🚚</span>
+                    <span id="unlock-badge">Add ₹200.00 more to unlock FREE Delivery</span>
+                </div>
+                <div class="trip-shortcut-link" onclick="openScreenB()">
+                    Join Rider Trip ⚡
+                </div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar" style="width: 25%;"></div>
+            </div>
+        </div>
+
+        <!-- 9. Persistent Bottom Navigation Bar -->
+        <nav class="bottom-nav-bar">
+            <div class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" onclick="toggleCartDrawer()">
+                <span class="nav-icon">🛒</span>
+                <span>Group Cart</span>
+                <span class="nav-badge" id="item-count">0</span>
+            </div>
+            <div class="nav-item" onclick="openScreenB()">
+                <span class="nav-icon">🛵</span>
+                <span>Group Trip</span>
+            </div>
+            <a class="nav-item" href="ops_console.html" target="_blank">
+                <span class="nav-icon">📊</span>
+                <span>Ops Console</span>
+            </a>
+        </nav>
+
+        <!-- 10. Screen B Overlay (Rider Group Delivery Detail View) -->
+        <div class="overlay-screen" id="rider-trip-detail-screen">
+            <div class="overlay-header">
+                <button class="back-btn" onclick="closeScreenB()">←</button>
+                <div class="overlay-title">
+                    <h2>Ride with <span id="detail-rider-name">Rahul Sharma</span>'s trip</h2>
+                    <p id="detail-geofence-name">Aravali Heights, Tower B</p>
+                </div>
             </div>
 
-            <!-- White Rider Card -->
-            <div class="rider-card">
-                <div class="rider-left">
-                    <div class="rider-avatar">🛵</div>
-                    <div>
-                        <div id="card-rider-name" class="rider-name">Rahul Sharma</div>
-                        <div class="rider-orders-sub">Already carrying <span id="detail-assigned-count">4</span> orders</div>
+            <div class="overlay-content">
+                <!-- Rider Detail Card -->
+                <div class="rider-detail-card">
+                    <div class="rider-detail-left">
+                        <div class="rider-avatar-large">🛵</div>
+                        <div class="rider-detail-info">
+                            <h4 id="card-rider-name">Rahul Sharma</h4>
+                            <p>Already carrying <span id="detail-assigned-count">4</span> orders</p>
+                        </div>
+                    </div>
+                    <div class="rider-eta-block">
+                        <div class="eta-num" id="detail-eta-number">6</div>
+                        <div class="eta-lbl">MINS AWAY</div>
                     </div>
                 </div>
-                <div class="rider-eta-box">
-                    <div id="detail-eta-number" class="eta-number">6</div>
-                    <div class="eta-label">MINS AWAY</div>
+
+                <!-- Dashed Green Discount Strip -->
+                <div class="dashed-discount-strip">
+                    <span>🎉</span>
+                    <span id="detail-discount-text">3rd person to join saves ₹35.00 delivery fee — 100% waived across the trip</span>
                 </div>
-            </div>
 
-            <!-- Dashed Green Discount Strip -->
-            <div class="discount-strip">
-                <span style="font-size: 1.2rem;">🎉</span>
-                <span id="detail-discount-text">3rd person to join saves ₹35.00 delivery fee — 100% waived across the trip</span>
-            </div>
-
-            <!-- Already On This Trip Section -->
-            <div>
+                <!-- Members List Section -->
                 <div class="member-section-header">
-                    <div class="section-heading">Already on this trip</div>
-                    <span id="detail-member-badge" class="member-count-pill">2 Members</span>
+                    <h3>Already on this trip</h3>
+                    <span class="member-badge" id="detail-member-badge">2 Members</span>
                 </div>
 
-                <ul id="detail-member-list" class="member-list">
-                    <!-- Dynamic member rows rendered from WebSocket/API -->
+                <ul class="member-list-ul" id="detail-member-list">
+                    <!-- Dynamic member rows rendered by JS -->
                 </ul>
             </div>
 
-            <!-- Sticky Bottom CTA -->
-            <div class="sticky-cta-bar">
-                <div class="cta-inner">
-                    <button id="join-trip-cta-btn" class="btn-join-cta" onclick="joinRiderTrip()">
-                        <span id="cta-btn-label">Join trip — pay ₹17.50 delivery fee <span class="savings-highlight">(Save ₹17.50)</span></span>
-                    </button>
+            <!-- Sticky Bottom CTA Button for Screen B -->
+            <div class="screen-b-sticky-cta">
+                <button class="cta-btn-large" id="join-trip-cta-btn" onclick="joinRiderTrip()">
+                    <span id="cta-btn-label">Join trip — FREE ₹0.00 delivery fee (Save ₹35.00 ⚡)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 11. Group Cart Drawer Modal -->
+        <div class="cart-drawer-overlay" id="cart-drawer-overlay">
+            <div class="cart-drawer-content">
+                <div class="cart-drawer-header">
+                    <div class="cart-drawer-title">
+                        <span>🛒 Shared Group Cart</span>
+                        <div class="ws-status-pill">
+                            <span class="ws-dot-indicator" id="ws-dot"></span>
+                            <span id="ws-status">Connecting...</span>
+                        </div>
+                    </div>
+                    <button class="close-drawer-btn" onclick="toggleCartDrawer()">✕</button>
                 </div>
+
+                <ul class="item-list-container" id="item-list">
+                    <!-- Dynamic items rendered by JS -->
+                </ul>
+
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; margin-top: 10px;">
+                    <span>Total Group Cart Value:</span>
+                    <span id="cart-total" style="color: var(--green-success);">₹0.00</span>
+                </div>
+
+                <button class="add-item-action-btn" id="add-item-btn" onclick="simulateAddItemBackend()">
+                    Simulate Add Item to Group Cart
+                </button>
             </div>
         </div>
 
     </div>
 
+    <!-- JavaScript Logic & WebSocket Integration -->
     <script>
-        const geofenceID = "geofence-aravali";
-        const memberID = "mem-web-" + Math.floor(Math.random() * 1000);
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const wsUrl = protocol + window.location.host + '/ws/groupcart';
+        
+        let ws;
+        let cartTotalPaise = 0;
         let hasJoinedTrip = false;
         let currentTripData = null;
 
-        function showScreen(name) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            if (name === 'home') {
-                document.getElementById('screen-home').classList.add('active');
-            } else {
-                document.getElementById('screen-detail').classList.add('active');
-            }
-        }
+        const geofenceID = "geofence-aravali";
+        const memberID = "mem-web-304";
 
         function connectWS() {
-            const wsScheme = window.location.protocol === "https:" ? "wss:" : "ws:";
-            const ws = new WebSocket(`${wsScheme}//${window.location.host}/ws/ops`);
-            const wsDot = document.getElementById("ws-dot");
-            const wsStatus = document.getElementById("ws-status");
+            const dot = document.getElementById('ws-dot');
+            const status = document.getElementById('ws-status');
+
+            ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                wsDot.classList.add("connected");
-                wsStatus.innerText = "Connected";
+                dot.style.background = '#10B981';
+                status.innerText = 'Live Synced';
             };
 
             ws.onclose = () => {
-                wsDot.classList.remove("connected");
-                wsStatus.innerText = "Disconnected";
-                setTimeout(connectWS, 2000);
+                dot.style.background = '#EF4444';
+                status.innerText = 'Disconnected';
+                setTimeout(connectWS, 3000);
             };
 
-            ws.onmessage = (evt) => {
+            ws.onmessage = (event) => {
                 try {
-                    const data = JSON.parse(evt.data);
-                    if (data.type === "TRIP_AVAILABLE" || data.type === "TRIP_UPDATED") {
-                        fetchActiveTrip();
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'CART_UPDATE' || data.type === 'INITIAL_STATE') {
+                        renderCart(data.cart);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error("WS message parse error:", e);
+                }
             };
+        }
+
+        function renderCart(cart) {
+            if (!cart) return;
+            const itemList = document.getElementById('item-list');
+            const cartTotal = document.getElementById('cart-total');
+            const itemCount = document.getElementById('item-count');
+            const unlockBadge = document.getElementById('unlock-badge');
+            const progressBar = document.getElementById('progress-bar');
+
+            itemList.innerHTML = '';
+            cartTotalPaise = cart.total_paise || 0;
+            const items = cart.items || [];
+            
+            itemCount.innerText = items.length;
+
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'cart-item-row';
+                const priceFormatted = (item.price_paise / 100).toFixed(2);
+                li.innerHTML = `
+                    <span>${item.name}</span>
+                    <span style="color: var(--green-success);">₹${priceFormatted}</span>
+                `;
+                itemList.appendChild(li);
+            });
+
+            const totalFormatted = (cartTotalPaise / 100).toFixed(2);
+            cartTotal.innerText = `₹${totalFormatted}`;
+
+            const targetPaise = 20000; // ₹200 threshold
+            if (cartTotalPaise >= targetPaise) {
+                unlockBadge.innerText = "🎉 FREE Delivery Unlocked!";
+                progressBar.style.width = "100%";
+            } else {
+                const remaining = ((targetPaise - cartTotalPaise) / 100).toFixed(2);
+                unlockBadge.innerText = `Add ₹${remaining} more to unlock FREE Delivery`;
+                const pct = Math.min(100, Math.max(10, (cartTotalPaise / targetPaise) * 100));
+                progressBar.style.width = `${pct}%`;
+            }
         }
 
         async function fetchActiveTrip() {
@@ -691,7 +1538,7 @@
                     renderTripUI(trip);
                 }
             } catch (e) {
-                console.error("Failed to fetch active trip:", e);
+                console.error("Fetch active trip error:", e);
             }
         }
 
@@ -702,6 +1549,7 @@
             const geofenceName = trip.geofence_name || "Aravali Heights, Tower B";
             const assignedCount = trip.assigned_order_count || 4;
             const etaMin = trip.eta_seconds ? Math.max(1, Math.round(trip.eta_seconds / 60)) : 6;
+            
             let members = trip.members || [];
             if (!members || members.length === 0) {
                 members = [
@@ -729,8 +1577,6 @@
             const isUserInMembers = members.some(m => m.member_id === memberID) || hasJoinedTrip;
             const targetCountForUser = isUserInMembers ? currentMemberCount : currentMemberCount + 1;
 
-            // Compute exact fee for joining user based on target member count
-            // Tier formula: N=1 => ₹35.00 (3500p), N=2 => ₹17.50 (1750p), N>=3 => ₹0.00 (0p)
             let userFeePaise = 3500;
             let userDiscountPaise = 0;
             if (targetCountForUser === 2) {
@@ -810,11 +1656,11 @@
             } else {
                 ctaBtn.classList.remove('joined');
                 if (userFeePaise === 0) {
-                    ctaLabel.innerHTML = `<span>Join trip — FREE ₹0.00 delivery fee <span class="savings-highlight">(Save ₹35.00 ⚡)</span></span>`;
+                    ctaLabel.innerHTML = `<span>Join trip — FREE ₹0.00 delivery fee <span style="color: var(--zepto-lime);">(Save ₹35.00 ⚡)</span></span>`;
                 } else {
                     const feeText = (userFeePaise / 100).toFixed(2);
                     const discText = (userDiscountPaise / 100).toFixed(2);
-                    ctaLabel.innerHTML = `<span>Join trip — pay ₹${feeText} delivery fee <span class="savings-highlight">(Save ₹${discText})</span></span>`;
+                    ctaLabel.innerHTML = `<span>Join trip — pay ₹${feeText} delivery fee <span style="color: var(--zepto-lime);">(Save ₹${discText})</span></span>`;
                 }
             }
         }
@@ -836,7 +1682,7 @@
                         member_id: stableMemberID,
                         display_name: "Vikram Kumar",
                         flat_location: "Flat 304, Tower B",
-                        items_summary: "Organic Eggs (6-pack), Greek Yogurt",
+                        items_summary: "Organic Eggs, Greek Yogurt",
                         order_total_paise: 22000,
                         avatar_color: "#10B981"
                     })
@@ -852,8 +1698,26 @@
             }
         }
 
-        async function addItemToCart(name, pricePaise) {
+        function addItemToCart(name, pricePaise) {
             joinRiderTrip();
+            toggleCartDrawer();
+        }
+
+        function simulateAddItemBackend() {
+            joinRiderTrip();
+        }
+
+        function openScreenB() {
+            document.getElementById('rider-trip-detail-screen').classList.add('open');
+        }
+
+        function closeScreenB() {
+            document.getElementById('rider-trip-detail-screen').classList.remove('open');
+        }
+
+        function toggleCartDrawer() {
+            const drawer = document.getElementById('cart-drawer-overlay');
+            drawer.classList.toggle('open');
         }
 
         window.onload = () => {
