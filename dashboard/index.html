@@ -1527,6 +1527,7 @@
             ws.onopen = () => {
                 dot.style.background = '#10B981';
                 status.innerText = 'Live Synced';
+                checkHealthz();
             };
 
             ws.onclose = () => {
@@ -1534,6 +1535,27 @@
                 status.innerText = 'Disconnected';
                 setTimeout(connectWS, 3000);
             };
+
+        async function checkHealthz() {
+            try {
+                const resp = await fetch('/healthz');
+                const dot = document.getElementById('ws-dot');
+                const status = document.getElementById('ws-status');
+                if (resp.ok) {
+                    const health = await resp.json();
+                    if (health.status === 'ok' && ws && ws.readyState === WebSocket.OPEN) {
+                        dot.style.background = '#10B981';
+                        status.innerText = 'Live Synced';
+                    }
+                } else {
+                    dot.style.background = '#F59E0B';
+                    status.innerText = 'Degraded (Redis Reconnecting)';
+                }
+            } catch (e) {
+                console.error("Health check error:", e);
+            }
+        }
+        setInterval(checkHealthz, 10000);
 
             ws.onmessage = (event) => {
                 try {

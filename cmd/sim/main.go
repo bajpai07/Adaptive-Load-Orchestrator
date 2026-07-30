@@ -320,6 +320,29 @@ func main() {
 			json.NewEncoder(w).Encode(t)
 		})
 
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			
+			pingErr := rdb.Ping(r.Context()).Err()
+			if pingErr != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"status":    "degraded",
+					"redis":     "unreachable",
+					"error":     pingErr.Error(),
+					"timestamp": time.Now(),
+				})
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":    "ok",
+				"redis":     "connected",
+				"timestamp": time.Now(),
+			})
+		})
+
 		http.Handle("/", http.FileServer(http.Dir("./dashboard")))
 		log.Printf("HTTP Server listening continuously on :%d ...", port)
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
