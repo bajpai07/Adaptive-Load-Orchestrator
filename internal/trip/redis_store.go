@@ -53,10 +53,10 @@ if targetMemberID then
         if m.member_id and m.member_id == targetMemberID then
             exists = true
             if newMember then
-                if newMember.items_summary and #newMember.items_summary > 0 then
+                if newMember.items_summary ~= nil then
                     m.items_summary = newMember.items_summary
                 end
-                if newMember.order_total_paise and newMember.order_total_paise > 0 then
+                if newMember.order_total_paise ~= nil then
                     m.order_total_paise = newMember.order_total_paise
                 end
                 if newMember.display_name and #newMember.display_name > 0 then

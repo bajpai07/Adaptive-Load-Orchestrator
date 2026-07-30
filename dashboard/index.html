@@ -1684,6 +1684,10 @@
 
         async function fetchActiveTrip() {
             try {
+                if (hasJoinedTrip) {
+                    await syncTripWithLiveCart();
+                    return;
+                }
                 const resp = await fetch(`/api/trips/active?geofence_id=${geofenceID}`);
                 if (resp.ok) {
                     const trip = await resp.json();
