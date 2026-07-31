@@ -99,7 +99,7 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 						DisplayName:     "Aarav Mehta",
 						FlatLocation:    "Flat 402, Tower B",
 						ItemsSummary:    "Amul Taaza Milk (1L), Brown Bread",
-						OrderTotalPaise: 18500,
+						OrderTotalPaise: 11500,
 						AvatarColor:     "#8B5CF6",
 					},
 					{
@@ -108,7 +108,7 @@ func (sim *RiderSimulator) Tick(ctx context.Context, deltaSimSec float64) ([]*Tr
 						DisplayName:     "Priya Sharma",
 						FlatLocation:    "Flat 201, Tower B",
 						ItemsSummary:    "Lay's Chips (52g), Coca-Cola (750ml)",
-						OrderTotalPaise: 14000,
+						OrderTotalPaise: 6000,
 						AvatarColor:     "#EC4899",
 					},
 				}
