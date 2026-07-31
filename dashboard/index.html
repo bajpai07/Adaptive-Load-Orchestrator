@@ -1763,12 +1763,16 @@
                     }
                 }
 
+                const safeName = item.name.replace(/'/g, "\\'");
                 li.innerHTML = `
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-dark);">${item.name}</span>
                         <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Added by ${adderName}</span>
                     </div>
-                    <span style="color: var(--green-success); font-weight: 800; font-size: 0.9rem;">₹${priceFormatted}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--green-success); font-weight: 800; font-size: 0.9rem;">₹${priceFormatted}</span>
+                        <button onclick="removeItemFromCart('${safeName}', ${item.price_paise})" style="background: rgba(225, 29, 72, 0.08); color: var(--zepto-pink-accent); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;" title="Remove item from group cart">✕</button>
+                    </div>
                 `;
                 itemList.appendChild(li);
             });
@@ -2005,9 +2009,11 @@
                 if (overlay) {
                     if (qty > 0) {
                         overlay.classList.add('stepper-active');
+                        const safeName = pName.replace(/'/g, "\\'");
                         overlay.innerHTML = `
-                            <span onclick="event.stopPropagation(); addItemToCart('${pName}', ${pPrice})" style="cursor: pointer; padding: 0 4px;">+</span>
-                            <span style="font-weight: 800; font-size: 0.85rem; color: #FFFFFF;">${qty} in cart</span>
+                            <span onclick="event.stopPropagation(); removeItemFromCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Remove item">−</span>
+                            <span style="font-weight: 800; font-size: 0.82rem; color: #FFFFFF;">${qty} in cart</span>
+                            <span onclick="event.stopPropagation(); addItemToCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Add item">+</span>
                         `;
                     } else {
                         overlay.classList.remove('stepper-active');
@@ -2083,6 +2089,29 @@
             }
             if (autoOpenDrawer) {
                 openCartDrawer();
+            }
+        }
+
+        async function removeItemFromCart(name, pricePaise) {
+            const targetCartID = await ensureCartJoined();
+            try {
+                const resp = await fetch("/api/carts/item/remove", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cart_id: targetCartID,
+                        name: name || "Amul Taaza Milk (1L)"
+                    })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.cart) {
+                        renderCart(data.cart);
+                        showToast(`Removed ${name} from cart`, "ℹ");
+                    }
+                }
+            } catch (e) {
+                console.error("Remove item error:", e);
             }
         }
 

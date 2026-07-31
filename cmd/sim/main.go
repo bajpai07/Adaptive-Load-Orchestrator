@@ -228,6 +228,7 @@ func main() {
 		http.HandleFunc("/ws/ops", opsServer.HandleWS)
 		http.HandleFunc("/api/carts/join", groupCartServer.HandleJoinCart)
 		http.HandleFunc("/api/carts/item", groupCartServer.HandleAddItem)
+		http.HandleFunc("/api/carts/item/remove", groupCartServer.HandleRemoveItem)
 		http.HandleFunc("/ws/cart", groupCartServer.HandleWebSocket)
 
 		// Phase 5 Rider Trip Endpoints

@@ -245,6 +245,57 @@ func (s *Server) HandleAddItem(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) HandleRemoveItem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		CartID string `json:"cart_id"`
+		SKU    string `json:"sku"`
+		Name   string `json:"name"`
+		ItemID string `json:"item_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	cart, err := s.store.GetCart(r.Context(), req.CartID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	targetItemID := req.ItemID
+	if targetItemID == "" {
+		for i := len(cart.Items) - 1; i >= 0; i-- {
+			if (req.Name != "" && cart.Items[i].Name == req.Name) || (req.SKU != "" && cart.Items[i].SKU == req.SKU) {
+				targetItemID = cart.Items[i].ID
+				break
+			}
+		}
+	}
+
+	if targetItemID == "" {
+		http.Error(w, "Item not found in cart", http.StatusNotFound)
+		return
+	}
+
+	updatedCart, err := s.store.RemoveItemAtomic(r.Context(), req.CartID, targetItemID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"cart": updatedCart,
+	})
+}
+
 func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	cartID := r.URL.Query().Get("cart_id")
 	memberID := r.URL.Query().Get("member_id")
