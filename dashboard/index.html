@@ -1741,6 +1741,19 @@
             });
 
             const memberSubtotalsPaise = {};
+            const memberItemSummaries = {};
+
+            const knownMembers = [memberID, "mem-web-304", "mem-1", "mem-2"];
+            if (cart.members) {
+                cart.members.forEach(m => { if (m.id && !knownMembers.includes(m.id)) knownMembers.push(m.id); });
+            }
+            if (currentTripData && currentTripData.members) {
+                currentTripData.members.forEach(m => { if (m.member_id && !knownMembers.includes(m.member_id)) knownMembers.push(m.member_id); });
+            }
+            knownMembers.forEach(mId => {
+                memberSubtotalsPaise[mId] = 0;
+                memberItemSummaries[mId] = [];
+            });
 
             items.forEach(item => {
                 const li = document.createElement('li');
@@ -1749,6 +1762,8 @@
                 
                 const adderID = item.added_by_member_id || memberID;
                 memberSubtotalsPaise[adderID] = (memberSubtotalsPaise[adderID] || 0) + item.price_paise;
+                if (!memberItemSummaries[adderID]) memberItemSummaries[adderID] = [];
+                memberItemSummaries[adderID].push(item.name);
 
                 let adderName = memberNameMap[adderID];
                 if (!adderName) {
@@ -1829,15 +1844,6 @@
             }
 
             updateProductSteppers();
-
-            const memberItemSummaries = {};
-            (cart.items || []).forEach(item => {
-                const mId = item.added_by_member_id || memberID;
-                if (!memberItemSummaries[mId]) {
-                    memberItemSummaries[mId] = [];
-                }
-                memberItemSummaries[mId].push(item.name);
-            });
 
             window.rawCartItems = cart.items || [];
             window.liveMemberSubtotalsPaise = memberSubtotalsPaise;
