@@ -1290,8 +1290,6 @@
             <!-- Mode Tabs Row -->
             <div class="store-mode-tabs">
                 <div class="mode-tab active">zepto</div>
-                <div class="mode-tab outlined">Monsoon Store</div>
-                <div class="mode-tab outlined">Fresh</div>
             </div>
 
             <!-- Search Bar Row -->
@@ -1807,6 +1805,11 @@
                 }
 
                 const safeName = item.name.replace(/'/g, "\\'");
+                const isOwnItem = (adderID === memberID || adderID === "mem-web-304" || adderID === "mem-creator");
+                const removeBtnHTML = isOwnItem ? `
+                    <button onclick="removeItemFromCart('${safeName}', ${item.price_paise})" style="background: rgba(225, 29, 72, 0.08); color: var(--zepto-pink-accent); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;" title="Remove your item from group cart">✕</button>
+                ` : '';
+
                 li.innerHTML = `
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-dark);">${item.name}</span>
@@ -1814,7 +1817,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="color: var(--green-success); font-weight: 800; font-size: 0.9rem;">₹${priceFormatted}</span>
-                        <button onclick="removeItemFromCart('${safeName}', ${item.price_paise})" style="background: rgba(225, 29, 72, 0.08); color: var(--zepto-pink-accent); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;" title="Remove item from group cart">✕</button>
+                        ${removeBtnHTML}
                     </div>
                 `;
                 itemList.appendChild(li);
