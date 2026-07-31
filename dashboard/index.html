@@ -1280,6 +1280,18 @@
             font-size: 0.65rem;
             font-weight: 800;
             margin-left: 4px;
+        .product-tooltip-popover {
+            position: absolute;
+            z-index: 10000;
+            background: rgba(30, 27, 75, 0.96);
+            border: 1px solid var(--zepto-purple-bright);
+            border-radius: 10px;
+            padding: 6px 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            max-width: 220px;
+            pointer-events: auto;
+            transition: opacity 0.2s ease;
         }
     </style>
 </head>
@@ -2248,9 +2260,9 @@
         }
 
         function updateProductSteppers() {
-            const counts = {};
-            liveCartItems.forEach(name => {
-                counts[name] = (counts[name] || 0) + 1;
+            const groupCounts = {};
+            (liveCartItems || []).forEach(name => {
+                groupCounts[name] = (groupCounts[name] || 0) + 1;
             });
 
             document.querySelectorAll('.product-card').forEach(card => {
@@ -2258,17 +2270,20 @@
                 const pPrice = parseInt(card.dataset.productPrice);
                 if (!pName) return;
 
-                const qty = counts[pName] || 0;
+                const groupQty = groupCounts[pName] || 0;
                 const overlay = card.querySelector('.add-item-btn-overlay');
 
                 if (overlay) {
-                    if (qty > 0) {
+                    if (groupQty > 0) {
                         overlay.classList.add('stepper-active');
                         const safeName = pName.replace(/'/g, "\\'");
                         overlay.innerHTML = `
-                            <span onclick="event.stopPropagation(); removeItemFromCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Remove item">−</span>
-                            <span style="font-weight: 800; font-size: 0.82rem; color: #FFFFFF;">${qty} in cart</span>
-                            <span onclick="event.stopPropagation(); addItemToCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Add item">+</span>
+                            <span onclick="event.stopPropagation(); removeItemFromCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Remove 1 unit">−</span>
+                            <span onclick="showProductBreakdownTooltip(event, '${safeName}')" style="font-weight: 800; font-size: 0.72rem; color: #FFFFFF; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.1; padding: 2px 4px;" title="Tap to view group breakdown">
+                                <span>${groupQty} in cart</span>
+                                <span style="font-size: 0.62rem; color: var(--zepto-lime); font-weight: 700;">(Group)</span>
+                            </span>
+                            <span onclick="event.stopPropagation(); addItemToCart('${safeName}', ${pPrice})" style="cursor: pointer; padding: 0 6px; font-weight: 900; font-size: 1.1rem; color: #FFFFFF;" title="Add 1 unit">+</span>
                         `;
                     } else {
                         overlay.classList.remove('stepper-active');
@@ -2276,6 +2291,62 @@
                     }
                 }
             });
+        }
+
+        function showProductBreakdownTooltip(event, productName) {
+            event.stopPropagation();
+
+            const existingTooltip = document.getElementById('product-breakdown-tooltip');
+            if (existingTooltip) existingTooltip.remove();
+
+            const breakdown = {};
+            (window.rawCartItems || []).forEach(item => {
+                if (item.name === productName) {
+                    let mId = item.added_by_member_id;
+                    if (!mId || mId === "mem-creator" || mId === "mem-web-304") {
+                        mId = memberID;
+                    }
+                    let mName = "You";
+                    if (mId === "mem-1") mName = "Aarav Mehta";
+                    else if (mId === "mem-2") mName = "Priya Sharma";
+                    else if (mId === memberID || mId === "mem-web-304") mName = "You";
+                    else mName = `Member ${mId}`;
+
+                    breakdown[mName] = (breakdown[mName] || 0) + 1;
+                }
+            });
+
+            const parts = Object.entries(breakdown).map(([name, qty]) => `${name}: ${qty}`);
+            const breakdownText = parts.length > 0 ? parts.join(" • ") : "No items added";
+
+            const tooltip = document.createElement('div');
+            tooltip.id = 'product-breakdown-tooltip';
+            tooltip.className = 'product-tooltip-popover';
+            tooltip.innerHTML = `
+                <div style="font-weight: 800; font-size: 0.72rem; color: var(--zepto-lime); margin-bottom: 2px;">📊 Group Split: ${productName}</div>
+                <div style="font-size: 0.75rem; color: white; font-weight: 600;">${breakdownText}</div>
+            `;
+
+            document.body.appendChild(tooltip);
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - 230, rect.left - 35))}px`;
+            tooltip.style.top = `${Math.max(10, rect.top - 52 + window.scrollY)}px`;
+
+            const dismissTimer = setTimeout(() => {
+                if (tooltip) tooltip.remove();
+            }, 3200);
+
+            const handleOutsideClick = (e) => {
+                if (!tooltip.contains(e.target)) {
+                    tooltip.remove();
+                    clearTimeout(dismissTimer);
+                    document.removeEventListener('click', handleOutsideClick);
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', handleOutsideClick);
+            }, 50);
         }
 
         async function joinRiderTrip() {
