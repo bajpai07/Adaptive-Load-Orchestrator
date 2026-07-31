@@ -1612,8 +1612,9 @@
                     </div>
                 </div>
 
-                <button class="add-item-action-btn" id="add-item-btn" onclick="simulateAddItemBackend()">
-                    + Add Item to Group Cart
+                <button class="add-item-action-btn" id="cart-drawer-action-btn" onclick="closeCartDrawer()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: all 0.2s ease;">
+                    <span>Add More Items from Store</span>
+                    <span id="footer-cart-total-badge" style="background: rgba(255, 255, 255, 0.22); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;">Total: ₹0.00</span>
                 </button>
             </div>
         </div>
@@ -1824,6 +1825,11 @@
 
             const totalFormatted = (cartTotalPaise / 100).toFixed(2);
             cartTotal.innerText = `₹${totalFormatted}`;
+
+            const footerBadge = document.getElementById('footer-cart-total-badge');
+            if (footerBadge) {
+                footerBadge.innerText = `Total: ₹${totalFormatted}`;
+            }
 
             const targetPaise = 20000; // ₹200 threshold
             if (cartTotalPaise >= targetPaise) {
