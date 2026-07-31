@@ -1596,10 +1596,25 @@
                     <!-- Dynamic items rendered by JS -->
                 </ul>
 
-                <!-- Grand Total Row -->
-                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.05rem; padding: 10px 0; border-top: 2px solid var(--border-light); margin-top: 6px;">
-                    <span>Total Group Cart Value:</span>
-                    <span id="cart-total" style="color: var(--green-success);">₹0.00</span>
+                <!-- Dual Totals Summary Card (Your Value + Total Group Cart Value) -->
+                <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(99, 102, 241, 0.06)); border: 1.5px solid rgba(124, 58, 237, 0.18); border-radius: 14px; padding: 12px 14px; margin: 10px 0; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- 1. Your Personal Value -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: var(--text-dark);">
+                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                            <span>👤</span> Your Cart Value (Your Items):
+                        </span>
+                        <span id="user-cart-total" style="color: var(--zepto-purple-bright); font-weight: 800; font-size: 0.95rem;">₹0.00</span>
+                    </div>
+
+                    <div style="height: 1px; background: var(--border-light); width: 100%;"></div>
+
+                    <!-- 2. Combined Group Total -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.96rem; color: var(--text-dark);">
+                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 800;">
+                            <span>🛒</span> Total Group Cart Value:
+                        </span>
+                        <span id="cart-total" style="color: var(--green-success); font-weight: 900; font-size: 1.05rem;">₹0.00</span>
+                    </div>
                 </div>
 
                 <!-- Per-Member Subtotal Breakdown Section -->
@@ -1823,12 +1838,20 @@
                 cartTotalPaise = reconciledSumPaise;
             }
 
-            const totalFormatted = (cartTotalPaise / 100).toFixed(2);
-            cartTotal.innerText = `₹${totalFormatted}`;
+            const userSubtotalPaise = memberSubtotalsPaise[memberID] !== undefined ? memberSubtotalsPaise[memberID] : (memberSubtotalsPaise["mem-web-304"] || 0);
+            const userFormatted = (userSubtotalPaise / 100).toFixed(2);
+            const groupFormatted = (cartTotalPaise / 100).toFixed(2);
+
+            const userTotalEl = document.getElementById('user-cart-total');
+            if (userTotalEl) {
+                userTotalEl.innerText = `₹${userFormatted}`;
+            }
+
+            cartTotal.innerText = `₹${groupFormatted}`;
 
             const footerBadge = document.getElementById('footer-cart-total-badge');
             if (footerBadge) {
-                footerBadge.innerText = `Total: ₹${totalFormatted}`;
+                footerBadge.innerText = `Your: ₹${userFormatted} • Group: ₹${groupFormatted}`;
             }
 
             const targetPaise = 20000; // ₹200 threshold
