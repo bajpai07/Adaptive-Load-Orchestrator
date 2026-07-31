@@ -2106,6 +2106,13 @@
             document.getElementById('rider-trip-detail-screen').classList.remove('open');
         }
 
+        function toggleCartDrawer() {
+            const drawer = document.getElementById('cart-drawer-overlay');
+            if (drawer) {
+                drawer.classList.toggle('open');
+            }
+        }
+
         let activeCategoryFilter = "all";
         let currentSearchQuery = "";
 
