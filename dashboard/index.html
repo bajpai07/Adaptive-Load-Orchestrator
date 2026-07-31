@@ -356,30 +356,95 @@
 
         .sub-tiles-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            width: 100%;
         }
 
         .sub-tile {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 10px;
+            padding: 8px 4px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .sub-tile-icon {
-            font-size: 1.3rem;
-            margin-bottom: 4px;
+            font-size: 1.2rem;
+            margin-bottom: 3px;
         }
 
         .sub-tile-label {
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 700;
             color: #FFFFFF;
-            line-height: 1.2;
+            line-height: 1.15;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* Dynamic Empty State Card */
+        .empty-state-card {
+            grid-column: 1 / -1;
+            background: #FFFFFF;
+            border: 1.5px dashed var(--border-light);
+            border-radius: 18px;
+            padding: 32px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .empty-state-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .empty-state-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .empty-state-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 280px;
+            line-height: 1.4;
+        }
+
+        .clear-filter-btn {
+            background: var(--zepto-purple-light);
+            color: var(--zepto-purple-bright);
+            border: 1px solid var(--zepto-purple-bright);
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 4px;
+        }
+
+        .clear-filter-btn:hover {
+            background: var(--zepto-purple-bright);
+            color: #FFFFFF;
         }
 
         /* 5. Offers For You Scroll */
@@ -1233,7 +1298,7 @@
             <div class="search-row">
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="Search for 'milk', 'chips', 'eggs'...">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search for 'milk', 'chips', 'eggs'..." oninput="handleSearchInput(event)">
                 </div>
                 <div class="promo-chip" onclick="openScreenB()">
                     <span>🎉 Group Savings</span>
@@ -1242,13 +1307,14 @@
         </header>
 
         <!-- 2. Horizontally Scrollable Category Bar -->
-        <nav class="category-scroll-bar">
-            <div class="category-pill active">All</div>
-            <div class="category-pill highlight-deal" onclick="openScreenB()">⚡ Group Deals</div>
-            <div class="category-pill">Fresh & Dairy</div>
-            <div class="category-pill">Snacks & Drinks</div>
-            <div class="category-pill">Electronics</div>
-            <div class="category-pill">Pooja</div>
+        <nav class="category-scroll-bar" id="category-bar">
+            <div class="category-pill active" data-category="all" onclick="selectCategory('all', this)">All</div>
+            <div class="category-pill highlight-deal" data-category="deals" onclick="selectCategory('deals', this)">⚡ Group Deals</div>
+            <div class="category-pill" data-category="fresh-dairy" onclick="selectCategory('fresh-dairy', this)">Fresh & Dairy</div>
+            <div class="category-pill" data-category="snacks-drinks" onclick="selectCategory('snacks-drinks', this)">Snacks & Drinks</div>
+            <div class="category-pill" data-category="bakery" onclick="selectCategory('bakery', this)">Bakery</div>
+            <div class="category-pill" data-category="pooja" onclick="selectCategory('pooja', this)">Pooja</div>
+            <div class="category-pill" data-category="electronics" onclick="selectCategory('electronics', this)">Electronics</div>
         </nav>
 
         <!-- 3. Screen A — Home Rider Group Delivery Discovery Banner -->
@@ -1322,9 +1388,9 @@
             <h2 class="section-title">Fresh & Popular Items</h2>
         </section>
 
-        <div class="product-grid">
+        <div class="product-grid" id="product-grid">
             <!-- Product 1: Milk -->
-            <div class="product-card" data-product-name="Amul Taaza Milk (1L)" data-product-price="7500">
+            <div class="product-card" data-product-name="Amul Taaza Milk (1L)" data-product-price="7500" data-category="fresh-dairy">
                 <div class="product-img-wrapper">
                     <img src="images/milk.png" alt="Amul Taaza Milk">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Taaza Milk (1L)', 7500)">+</div>
@@ -1341,7 +1407,7 @@
             </div>
 
             <!-- Product 2: Eggs -->
-            <div class="product-card" data-product-name="Farm Fresh Eggs (6-pack)" data-product-price="6500">
+            <div class="product-card" data-product-name="Farm Fresh Eggs (6-pack)" data-product-price="6500" data-category="fresh-dairy">
                 <div class="product-img-wrapper">
                     <img src="images/eggs.png" alt="Farm Fresh Eggs">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Farm Fresh Eggs (6-pack)', 6500)">+</div>
@@ -1358,7 +1424,7 @@
             </div>
 
             <!-- Product 3: Chips -->
-            <div class="product-card" data-product-name="Lay's Magic Masala (52g)" data-product-price="2000">
+            <div class="product-card" data-product-name="Lay's Magic Masala (52g)" data-product-price="2000" data-category="snacks-drinks">
                 <div class="product-img-wrapper">
                     <img src="images/chips.png" alt="Lay's Chips">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Lay\'s Magic Masala (52g)', 2000)">+</div>
@@ -1375,7 +1441,7 @@
             </div>
 
             <!-- Product 4: Dahi -->
-            <div class="product-card" data-product-name="Amul Masti Dahi (400g)" data-product-price="4500">
+            <div class="product-card" data-product-name="Amul Masti Dahi (400g)" data-product-price="4500" data-category="fresh-dairy">
                 <div class="product-img-wrapper">
                     <img src="images/dahi.png" alt="Amul Masti Dahi">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Amul Masti Dahi (400g)', 4500)">+</div>
@@ -1392,7 +1458,7 @@
             </div>
 
             <!-- Product 5: Coca-Cola -->
-            <div class="product-card" data-product-name="Coca-Cola Bottle (750ml)" data-product-price="4000">
+            <div class="product-card" data-product-name="Coca-Cola Bottle (750ml)" data-product-price="4000" data-category="snacks-drinks">
                 <div class="product-img-wrapper">
                     <img src="images/cola.png" alt="Coca-Cola Bottle">
                     <div class="add-item-btn-overlay" onclick="addItemToCart('Coca-Cola Bottle (750ml)', 4000)">+</div>
@@ -2040,9 +2106,105 @@
             document.getElementById('rider-trip-detail-screen').classList.remove('open');
         }
 
-        function toggleCartDrawer() {
-            const drawer = document.getElementById('cart-drawer-overlay');
-            drawer.classList.toggle('open');
+        let activeCategoryFilter = "all";
+        let currentSearchQuery = "";
+
+        function handleSearchInput(e) {
+            currentSearchQuery = e.target.value.trim();
+            filterProducts();
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = "";
+            currentSearchQuery = "";
+            filterProducts();
+        }
+
+        function selectCategory(category, el) {
+            if (category === 'deals') {
+                openScreenB();
+                return;
+            }
+
+            activeCategoryFilter = category;
+
+            // Update tab active state
+            document.querySelectorAll('#category-bar .category-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            if (el) {
+                el.classList.add('active');
+            } else {
+                const targetPill = document.querySelector(`#category-bar .category-pill[data-category="${category}"]`);
+                if (targetPill) targetPill.classList.add('active');
+            }
+
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+
+            const cards = grid.querySelectorAll('.product-card');
+            let visibleCount = 0;
+            const queryLower = currentSearchQuery.toLowerCase();
+
+            // Remove existing dynamic empty state if present
+            const existingEmpty = grid.querySelector('.empty-state-card');
+            if (existingEmpty) {
+                existingEmpty.remove();
+            }
+
+            cards.forEach(card => {
+                const name = (card.dataset.productName || card.querySelector('.product-name')?.innerText || "").toLowerCase();
+                const category = card.dataset.category || "all";
+
+                const matchesSearch = queryLower === "" || name.includes(queryLower);
+                const matchesCategory = activeCategoryFilter === "all" || category === activeCategoryFilter;
+
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = "flex";
+                    visibleCount++;
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            if (visibleCount === 0) {
+                const emptyCard = document.createElement('div');
+                emptyCard.className = 'empty-state-card';
+
+                if (currentSearchQuery !== "") {
+                    emptyCard.innerHTML = `
+                        <div class="empty-state-icon">🔍</div>
+                        <h3 class="empty-state-title">No items found for "${escapeHtml(currentSearchQuery)}"</h3>
+                        <p class="empty-state-desc">We couldn't find any products matching your search query. Try searching for 'milk', 'chips', or 'eggs'.</p>
+                        <button class="clear-filter-btn" onclick="clearSearch()">Clear Search</button>
+                    `;
+                } else if (activeCategoryFilter !== "all") {
+                    const categoryNames = {
+                        "fresh-dairy": "Fresh & Dairy",
+                        "snacks-drinks": "Snacks & Drinks",
+                        "bakery": "Bakery",
+                        "pooja": "Pooja",
+                        "electronics": "Electronics"
+                    };
+                    const catName = categoryNames[activeCategoryFilter] || activeCategoryFilter;
+                    emptyCard.innerHTML = `
+                        <div class="empty-state-icon">✨</div>
+                        <h3 class="empty-state-title">${catName} Coming Soon</h3>
+                        <p class="empty-state-desc">We're expanding our inventory for ${catName} in your area! Check back soon or explore available items.</p>
+                        <button class="clear-filter-btn" onclick="selectCategory('all', null)">View All Items</button>
+                    `;
+                }
+                grid.appendChild(emptyCard);
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         window.onload = () => {
