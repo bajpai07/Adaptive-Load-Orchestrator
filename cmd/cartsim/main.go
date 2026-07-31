@@ -72,6 +72,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/carts/join", server.HandleJoinCart)
 	mux.HandleFunc("/api/carts/item", server.HandleAddItem)
+	mux.HandleFunc("/api/carts/item/remove", server.HandleRemoveItem)
 	mux.HandleFunc("/ws/cart", server.HandleWebSocket)
 
 	httptestServer := httptest.NewServer(mux)

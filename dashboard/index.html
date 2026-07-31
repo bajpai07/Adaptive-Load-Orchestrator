@@ -1785,7 +1785,10 @@
                 li.className = 'cart-item-row';
                 const priceFormatted = (item.price_paise / 100).toFixed(2);
                 
-                const adderID = item.added_by_member_id || memberID;
+                let adderID = item.added_by_member_id;
+                if (!adderID || adderID === "mem-creator" || adderID === "mem-web-304") {
+                    adderID = memberID;
+                }
                 memberSubtotalsPaise[adderID] = (memberSubtotalsPaise[adderID] || 0) + item.price_paise;
                 if (!memberItemSummaries[adderID]) memberItemSummaries[adderID] = [];
                 memberItemSummaries[adderID].push(item.name);

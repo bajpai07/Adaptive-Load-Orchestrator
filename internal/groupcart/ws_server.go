@@ -280,7 +280,10 @@ func (s *Server) HandleRemoveItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if targetItemID == "" {
-		http.Error(w, "Item not found in cart", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"cart": cart,
+		})
 		return
 	}
 
