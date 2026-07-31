@@ -61,6 +61,7 @@ type CartEvent struct {
 	CartID               string     `json:"cart_id"`
 	MemberID             string     `json:"member_id,omitempty"`
 	Item                 *CartItem  `json:"item,omitempty"`
+	Cart                 *GroupCart `json:"cart,omitempty"`
 	TotalPaise           int64      `json:"total_paise"`
 	UnlockThresholdPaise int64      `json:"unlock_threshold_paise"`
 	Unlocked             bool       `json:"unlocked"`

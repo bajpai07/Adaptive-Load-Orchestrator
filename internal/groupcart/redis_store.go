@@ -262,6 +262,7 @@ func (s *RedisCartStore) AddItemAtomic(ctx context.Context, cartID string, item 
 		CartID:               cartID,
 		MemberID:             item.AddedByMemberID,
 		Item:                 &item,
+		Cart:                 &cart,
 		TotalPaise:           cart.TotalPaise,
 		UnlockThresholdPaise: cart.UnlockThresholdPaise,
 		Unlocked:             cart.Unlocked,
@@ -274,6 +275,7 @@ func (s *RedisCartStore) AddItemAtomic(ctx context.Context, cartID string, item 
 		unlockPayload, _ := json.Marshal(&CartEvent{
 			Type:                 EventCartUnlocked,
 			CartID:               cartID,
+			Cart:                 &cart,
 			TotalPaise:           cart.TotalPaise,
 			UnlockThresholdPaise: cart.UnlockThresholdPaise,
 			Unlocked:             true,
@@ -332,6 +334,7 @@ func (s *RedisCartStore) RemoveItemAtomic(ctx context.Context, cartID string, it
 	eventPayload, _ := json.Marshal(&CartEvent{
 		Type:                 EventCartUpdated,
 		CartID:               cartID,
+		Cart:                 cart,
 		TotalPaise:           cart.TotalPaise,
 		UnlockThresholdPaise: cart.UnlockThresholdPaise,
 		Unlocked:             cart.Unlocked,

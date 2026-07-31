@@ -1263,6 +1263,24 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(91, 23, 147, 0.3);
         }
+
+        @keyframes rowFlash {
+            0% { background: rgba(16, 185, 129, 0.3); border: 1px solid var(--green-success); }
+            100% { background: var(--bg-canvas); border: 1px solid transparent; }
+        }
+        .cart-row-flash {
+            animation: rowFlash 1.5s ease-out;
+        }
+        .orphaned-badge {
+            background: rgba(239, 68, 68, 0.15);
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1550,16 +1568,31 @@
                     </div>
                 </div>
 
+                <!-- Rider Micro-Event Live Timeline (ITEM 5) -->
+                <div style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.1rem; animation: pulse 1.5s infinite;">📡</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 0.68rem; color: var(--zepto-purple-bright); font-weight: 800; text-transform: uppercase;">Live Dispatch Timeline</span>
+                            <span id="rider-micro-event-text" style="font-size: 0.78rem; font-weight: 700; color: var(--text-dark);">Order picked up & packed at Dark Store 1</span>
+                        </div>
+                    </div>
+                    <span id="animated-savings-badge" style="background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">Save ₹35.00 ⚡</span>
+                </div>
+
                 <!-- Dashed Green Discount Strip -->
                 <div class="dashed-discount-strip">
                     <span>🎉</span>
                     <span id="detail-discount-text">3rd person to join saves ₹35.00 delivery fee — 100% waived across the trip</span>
                 </div>
 
-                <!-- Members List Section -->
-                <div class="member-section-header">
+                <!-- Members List Section & Leave Simulation -->
+                <div class="member-section-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h3>Already on this trip</h3>
-                    <span class="member-badge" id="detail-member-badge">2 Members</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onclick="simulateMemberLeave('mem-2', 'Priya Sharma')" style="background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 3px 8px; font-size: 0.68rem; font-weight: 800; cursor: pointer;" title="Simulate member leaving mid-trip">Priya Leave ⚠️</button>
+                        <span class="member-badge" id="detail-member-badge">2 Members</span>
+                    </div>
                 </div>
 
                 <ul class="member-list-ul" id="detail-member-list">
@@ -1722,8 +1755,19 @@
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.type === 'CART_UPDATE' || data.type === 'INITIAL_STATE') {
-                        renderCart(data.cart);
+                    const targetCart = data.cart || (data.type === 'INITIAL_STATE' ? data : null);
+                    if (targetCart) {
+                        renderCart(targetCart);
+                    }
+                    if ((data.type === 'CART_UPDATED' || data.type === 'CART_UPDATE') && data.item) {
+                        const mId = data.member_id || data.item.added_by_member_id;
+                        let adderName = "A group member";
+                        if (mId === "mem-1") adderName = "Aarav Mehta";
+                        else if (mId === "mem-2") adderName = "Priya Sharma";
+                        else if (mId === memberID || mId === "mem-web-304") adderName = "You";
+                        
+                        showToast(`⚡ ${adderName} just added ${data.item.name}!`, "🛒", 3500);
+                        highlightCartRow(data.item.name);
                     }
                 } catch (e) {
                     console.error("WS message parse error:", e);
@@ -1732,9 +1776,45 @@
         }
 
         let liveCartItems = [];
+        window.lastCartData = null;
+        window.orphanedMembers = [];
+        window.itemStockLimits = {
+            "Farm Fresh Eggs (6-pack)": 2,
+            "Amul Masti Fresh Curd Dahi (400g)": 1
+        };
+
+        function highlightCartRow(itemName) {
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.cart-item-row');
+                rows.forEach(r => {
+                    if (r.dataset && r.dataset.itemName === itemName) {
+                        r.classList.remove('cart-row-flash');
+                        void r.offsetWidth;
+                        r.classList.add('cart-row-flash');
+                    }
+                });
+            }, 80);
+        }
+
+        function simulateMemberLeave(mId, mName) {
+            if (!window.orphanedMembers.includes(mId)) {
+                window.orphanedMembers.push(mId);
+            }
+            showToast(`⚠️ ${mName} left the trip! Items marked as Orphaned.`, "⚠️", 4000);
+            
+            if (currentTripData && currentTripData.members) {
+                currentTripData.members = currentTripData.members.filter(m => m.member_id !== mId);
+                renderTripUI(currentTripData);
+            }
+            if (window.lastCartData) {
+                renderCart(window.lastCartData);
+            }
+        }
 
         function renderCart(cart) {
             if (!cart) return;
+            window.lastCartData = cart;
+
             const itemList = document.getElementById('item-list');
             const cartTotal = document.getElementById('cart-total');
             const itemCount = document.getElementById('item-count');
@@ -1778,41 +1858,64 @@
             memberItemSummaries[memberID] = [];
             memberItemSummaries["mem-web-304"] = [];
 
+            // Display-Layer Grouping: Group duplicate product entries per member (ITEM 3)
+            const groupedMap = {};
             items.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'cart-item-row';
-                const priceFormatted = (item.price_paise / 100).toFixed(2);
-                
                 let adderID = item.added_by_member_id;
                 if (!adderID || adderID === "mem-creator" || adderID === "mem-web-304") {
                     adderID = memberID;
                 }
+                
                 memberSubtotalsPaise[adderID] = (memberSubtotalsPaise[adderID] || 0) + item.price_paise;
                 if (!memberItemSummaries[adderID]) memberItemSummaries[adderID] = [];
                 memberItemSummaries[adderID].push(item.name);
 
-                let adderName = memberNameMap[adderID];
+                const key = `${item.name}___${adderID}`;
+                if (!groupedMap[key]) {
+                    groupedMap[key] = {
+                        name: item.name,
+                        price_paise: item.price_paise,
+                        adderID: adderID,
+                        count: 0
+                    };
+                }
+                groupedMap[key].count++;
+            });
+
+            Object.values(groupedMap).forEach(group => {
+                const li = document.createElement('li');
+                li.className = 'cart-item-row';
+                li.dataset.itemName = group.name;
+
+                const totalPricePaise = group.count * group.price_paise;
+                const priceFormatted = (totalPricePaise / 100).toFixed(2);
+                const displayName = group.count > 1 ? `${group.name} × ${group.count}` : group.name;
+
+                let adderName = memberNameMap[group.adderID];
                 if (!adderName) {
-                    if (adderID === memberID || adderID === "mem-web-304") {
+                    if (group.adderID === memberID || group.adderID === "mem-web-304") {
                         adderName = "Person 1 (You)";
-                    } else if (adderID === "mem-1") {
+                    } else if (group.adderID === "mem-1") {
                         adderName = "Person 2 (Aarav Mehta)";
-                    } else if (adderID === "mem-2") {
+                    } else if (group.adderID === "mem-2") {
                         adderName = "Person 3 (Priya Sharma)";
                     } else {
-                        adderName = `Guest ${adderID}`;
+                        adderName = `Guest ${group.adderID}`;
                     }
                 }
 
-                const safeName = item.name.replace(/'/g, "\\'");
-                const isOwnItem = (adderID === memberID || adderID === "mem-web-304" || adderID === "mem-creator");
+                const isOrphaned = window.orphanedMembers && window.orphanedMembers.includes(group.adderID);
+                const orphanedTag = isOrphaned ? `<span class="orphaned-badge">⚠️ Orphaned</span>` : '';
+
+                const safeName = group.name.replace(/'/g, "\\'");
+                const isOwnItem = (group.adderID === memberID || group.adderID === "mem-web-304" || group.adderID === "mem-creator");
                 const removeBtnHTML = isOwnItem ? `
-                    <button onclick="removeItemFromCart('${safeName}', ${item.price_paise})" style="background: rgba(225, 29, 72, 0.08); color: var(--zepto-pink-accent); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;" title="Remove your item from group cart">✕</button>
+                    <button onclick="removeItemFromCart('${safeName}', ${group.price_paise})" style="background: rgba(225, 29, 72, 0.08); color: var(--zepto-pink-accent); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;" title="Remove 1 unit from group cart">✕</button>
                 ` : '';
 
                 li.innerHTML = `
                     <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-dark);">${item.name}</span>
+                        <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-dark);">${displayName} ${orphanedTag}</span>
                         <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Added by ${adderName}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -1914,7 +2017,61 @@
             } catch (e) {
                 console.error("Fetch active trip error:", e);
             }
+        let animatedDiscountPaise = 0;
+        let savingsAnimTimer = null;
+
+        function animateSavings(targetPaise) {
+            if (savingsAnimTimer) clearInterval(savingsAnimTimer);
+            const duration = 600;
+            const steps = 30;
+            const stepTime = duration / steps;
+            const startPaise = animatedDiscountPaise;
+            const diff = targetPaise - startPaise;
+            let currentStep = 0;
+
+            savingsAnimTimer = setInterval(() => {
+                currentStep++;
+                const progress = currentStep / steps;
+                animatedDiscountPaise = Math.round(startPaise + (diff * progress));
+                const formatted = (animatedDiscountPaise / 100).toFixed(2);
+                
+                const savingsEl = document.getElementById('animated-savings-badge');
+                if (savingsEl) {
+                    savingsEl.innerText = `Save ₹${formatted} ⚡`;
+                }
+                
+                if (currentStep >= steps) {
+                    clearInterval(savingsAnimTimer);
+                    animatedDiscountPaise = targetPaise;
+                }
+            }, stepTime);
         }
+
+        // Rider Timeline Micro-Events Simulation Loop (ITEM 5)
+        const riderMicroEvents = [
+            { eta: 14, text: "Order picked up & packed at Dark Store 1" },
+            { eta: 11, text: "Rider Rahul Sharma en route via Sector 42 Expressway" },
+            { eta: 7, text: "Rider crossing Golf Course Road Flyover" },
+            { eta: 3, text: "Rider entering Aravali Heights Main Gate" },
+            { eta: 1, text: "Rider arrived at Tower B Lift Lobby ⚡" }
+        ];
+        let microEventIndex = 0;
+
+        function initRiderTimelineLoop() {
+            setInterval(() => {
+                microEventIndex = (microEventIndex + 1) % riderMicroEvents.length;
+                const ev = riderMicroEvents[microEventIndex];
+                
+                const timelineTextEl = document.getElementById('rider-micro-event-text');
+                const etaNumEl = document.getElementById('detail-eta-number');
+                const homeEtaEl = document.getElementById('home-rider-eta');
+
+                if (timelineTextEl) timelineTextEl.innerText = ev.text;
+                if (etaNumEl) etaNumEl.innerText = ev.eta;
+                if (homeEtaEl) homeEtaEl.innerText = ev.eta;
+            }, 25000);
+        }
+        initRiderTimelineLoop();
 
         function renderTripUI(trip) {
             if (!trip) return;
@@ -1951,6 +2108,8 @@
             document.getElementById('detail-assigned-count').innerText = assignedCount;
             document.getElementById('detail-eta-number').innerText = etaMin;
             document.getElementById('detail-member-badge').innerText = `${currentMemberCount} Members`;
+
+            animateSavings(userDiscountPaise);
 
             // Discount Strip Copy
             let stripCopy = "";
@@ -2165,6 +2324,13 @@
         }
 
         async function addItemToCart(name, pricePaise, autoOpenDrawer = false) {
+            const currentQty = (liveCartItems || []).filter(n => n === name).length;
+            const stockLimit = window.itemStockLimits ? window.itemStockLimits[name] : null;
+            if (stockLimit !== null && currentQty >= stockLimit) {
+                showToast(`⚠️ Sold out! Only ${stockLimit} units of ${name} available.`, "⚠️", 4500);
+                return;
+            }
+
             const targetCartID = await ensureCartJoined();
             try {
                 const resp = await fetch("/api/carts/item", {
