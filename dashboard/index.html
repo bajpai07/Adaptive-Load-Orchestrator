@@ -1830,7 +1830,18 @@
 
             updateProductSteppers();
 
+            const memberItemSummaries = {};
+            (cart.items || []).forEach(item => {
+                const mId = item.added_by_member_id || memberID;
+                if (!memberItemSummaries[mId]) {
+                    memberItemSummaries[mId] = [];
+                }
+                memberItemSummaries[mId].push(item.name);
+            });
+
+            window.rawCartItems = cart.items || [];
             window.liveMemberSubtotalsPaise = memberSubtotalsPaise;
+            window.liveMemberItemSummaries = memberItemSummaries;
 
             // Sync updated cart items and total value to Rider Trip if already joined!
             if (hasJoinedTrip) {
@@ -1922,13 +1933,19 @@
                     const color = m.avatar_color || "#8B5CF6";
                     
                     let orderPaise = m.order_total_paise;
+                    let itemSummaryText = m.items_summary || "Group Order";
                     const mId = m.member_id;
+
                     if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise[mId] !== undefined) {
                         orderPaise = window.liveMemberSubtotalsPaise[mId];
                     } else if (mId === "mem-1" && (orderPaise === 18500 || !orderPaise)) {
                         orderPaise = 11500;
                     } else if (mId === "mem-2" && (orderPaise === 14000 || !orderPaise)) {
                         orderPaise = 6000;
+                    }
+
+                    if (window.liveMemberItemSummaries && window.liveMemberItemSummaries[mId] !== undefined) {
+                        itemSummaryText = formatItemsSummary(window.liveMemberItemSummaries[mId]);
                     }
 
                     const price = (orderPaise / 100).toFixed(2);
@@ -1943,7 +1960,7 @@
                                 <div>
                                     <div class="member-name">${nameLabel}</div>
                                     <div class="member-flat">${m.flat_location || "Tower B"}</div>
-                                    <div class="member-items">${m.items_summary || "Group Order"}</div>
+                                    <div class="member-items">${itemSummaryText}</div>
                                 </div>
                             </div>
                             <div class="member-price">₹${price}</div>
@@ -2049,8 +2066,12 @@
         async function syncTripWithLiveCart() {
             const stableOrderID = "ord-web-304";
             const stableMemberID = "mem-web-304";
-            const itemsSummaryText = formatItemsSummary(liveCartItems);
-            const totalPaiseVal = cartTotalPaise;
+            
+            const userItems = (window.rawCartItems || []).filter(i => (i.added_by_member_id === memberID || i.added_by_member_id === "mem-web-304"));
+            const userItemNames = userItems.map(i => i.name);
+            const itemsSummaryText = formatItemsSummary(userItemNames);
+            const userSubtotalPaise = userItems.reduce((sum, i) => sum + i.price_paise, 0);
+
             const targetTripID = (currentTripData && currentTripData.id) ? currentTripData.id : "trip-rider-1";
 
             try {
@@ -2064,7 +2085,7 @@
                         display_name: "Vikram Kumar",
                         flat_location: "Flat 304, Tower B",
                         items_summary: itemsSummaryText,
-                        order_total_paise: totalPaiseVal,
+                        order_total_paise: userSubtotalPaise,
                         avatar_color: "#10B981"
                     })
                 });
