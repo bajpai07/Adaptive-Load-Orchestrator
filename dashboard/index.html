@@ -1859,7 +1859,7 @@
             const riderName = trip.rider_name || "Rahul Sharma";
             const geofenceName = trip.geofence_name || "Aravali Heights, Tower B";
             const assignedCount = trip.assigned_order_count || 4;
-            const etaMin = trip.eta_seconds ? Math.max(1, Math.round(trip.eta_seconds / 60)) : 6;
+            const etaMin = 14;
             
             let members = trip.members || [];
             const currentMemberCount = members.length;

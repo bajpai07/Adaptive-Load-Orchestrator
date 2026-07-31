@@ -338,7 +338,7 @@ func main() {
 					BaseDeliveryFeePaise:    3500,
 					CurrentDeliveryFeePaise: 1750,
 					DiscountPaise:           1750,
-					ETASeconds:              360,
+					ETASeconds:              840,
 					Status:                  trip.TripStatusPooled,
 					CreatedAt:               time.Now(),
 				}
