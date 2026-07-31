@@ -1743,17 +1743,10 @@
             const memberSubtotalsPaise = {};
             const memberItemSummaries = {};
 
-            const knownMembers = [memberID, "mem-web-304", "mem-1", "mem-2"];
-            if (cart.members) {
-                cart.members.forEach(m => { if (m.id && !knownMembers.includes(m.id)) knownMembers.push(m.id); });
-            }
-            if (currentTripData && currentTripData.members) {
-                currentTripData.members.forEach(m => { if (m.member_id && !knownMembers.includes(m.member_id)) knownMembers.push(m.member_id); });
-            }
-            knownMembers.forEach(mId => {
-                memberSubtotalsPaise[mId] = 0;
-                memberItemSummaries[mId] = [];
-            });
+            memberSubtotalsPaise[memberID] = 0;
+            memberSubtotalsPaise["mem-web-304"] = 0;
+            memberItemSummaries[memberID] = [];
+            memberItemSummaries["mem-web-304"] = [];
 
             items.forEach(item => {
                 const li = document.createElement('li');
@@ -1942,16 +1935,33 @@
                     let itemSummaryText = m.items_summary || "Group Order";
                     const mId = m.member_id;
 
-                    if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise[mId] !== undefined) {
-                        orderPaise = window.liveMemberSubtotalsPaise[mId];
-                    } else if (mId === "mem-1" && (orderPaise === 18500 || !orderPaise)) {
-                        orderPaise = 11500;
-                    } else if (mId === "mem-2" && (orderPaise === 14000 || !orderPaise)) {
-                        orderPaise = 6000;
-                    }
-
-                    if (window.liveMemberItemSummaries && window.liveMemberItemSummaries[mId] !== undefined) {
-                        itemSummaryText = formatItemsSummary(window.liveMemberItemSummaries[mId]);
+                    if (mId === "mem-1") {
+                        // Fixed seed member 1: Aarav Mehta (₹115.00)
+                        if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise["mem-1"] > 0) {
+                            orderPaise = window.liveMemberSubtotalsPaise["mem-1"];
+                            itemSummaryText = formatItemsSummary(window.liveMemberItemSummaries["mem-1"]);
+                        } else {
+                            orderPaise = 11500;
+                            itemSummaryText = "Amul Taaza Milk (1L), Brown Bread";
+                        }
+                    } else if (mId === "mem-2") {
+                        // Fixed seed member 2: Priya Sharma (₹60.00)
+                        if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise["mem-2"] > 0) {
+                            orderPaise = window.liveMemberSubtotalsPaise["mem-2"];
+                            itemSummaryText = formatItemsSummary(window.liveMemberItemSummaries["mem-2"]);
+                        } else {
+                            orderPaise = 6000;
+                            itemSummaryText = "Lay's Chips (52g), Coca-Cola (750ml)";
+                        }
+                    } else {
+                        // Live User (Vikram Kumar / You / mem-web-304)
+                        if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise[mId] !== undefined) {
+                            orderPaise = window.liveMemberSubtotalsPaise[mId];
+                        }
+                        if (window.liveMemberItemSummaries && window.liveMemberItemSummaries[mId] !== undefined) {
+                            const userNames = window.liveMemberItemSummaries[mId];
+                            itemSummaryText = (userNames && userNames.length > 0) ? formatItemsSummary(userNames) : "Pending items in Group Cart";
+                        }
                     }
 
                     const price = (orderPaise / 100).toFixed(2);
