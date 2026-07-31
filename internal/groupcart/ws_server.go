@@ -279,12 +279,8 @@ func (s *Server) HandleRemoveItem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if targetItemID == "" {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"cart": cart,
-		})
-		return
+	if targetItemID == "" && req.Name != "" {
+		targetItemID = req.Name
 	}
 
 	updatedCart, err := s.store.RemoveItemAtomic(r.Context(), req.CartID, targetItemID)
