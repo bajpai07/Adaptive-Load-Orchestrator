@@ -2363,7 +2363,7 @@
                         subChip.style.cssText = "margin-top: 6px; background: rgba(124, 58, 237, 0.12); border: 1px dashed rgba(124, 58, 237, 0.4); border-radius: 8px; padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; gap: 4px;";
                         subChip.innerHTML = `
                             <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dark); line-height: 1.2;">🤖 Try <strong>${sub.name}</strong> instead?</span>
-                            <button onclick="event.stopPropagation(); addItemToCart('${safeSubName}', ${sub.price_paise})" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 6px; padding: 3px 8px; font-size: 0.68rem; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.3); white-space: nowrap;">Swap</button>
+                            <button onclick="event.stopPropagation(); acceptProductCardSwap('${safeSubName}', ${sub.price_paise})" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 6px; padding: 3px 8px; font-size: 0.68rem; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.3); white-space: nowrap;">Swap</button>
                         `;
                     }
                 } else {
@@ -2516,6 +2516,20 @@
             }
             if (autoOpenDrawer) {
                 openCartDrawer();
+            }
+        }
+
+        async function acceptProductCardSwap(subName, pricePaise) {
+            await addItemToCart(subName, pricePaise);
+            try {
+                await fetch('/api/substitution/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'accept' })
+                });
+                fetchSubstitutionMetrics();
+            } catch (e) {
+                console.error("Record product card swap accept error:", e);
             }
         }
 

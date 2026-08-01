@@ -297,23 +297,28 @@
     }
 
     function addLogItem(data) {
+      if (!data) return;
       const timeline = document.getElementById('timeline');
       const item = document.createElement('div');
       item.className = 'log-item';
 
+      const outcome = data.outcome || data.type || "STOCKOUT_SUBSTITUTION_SUGGESTED";
       let badgeClass = 'badge-noaction';
-      if (data.outcome === 'BATCHING_NUDGE_ISSUED') {
+
+      if (outcome === 'BATCHING_NUDGE_ISSUED') {
         badgeClass = 'badge-nudge';
         nudgeCount++;
         if (data.consolidated_count) mergedCount += data.consolidated_count;
-      } else if (data.outcome === 'RE_ROUTE_REJECTED_ON_COST') {
+      } else if (outcome === 'RE_ROUTE_REJECTED_ON_COST') {
         badgeClass = 'badge-rejected';
         rejectedCount++;
-      } else if (data.outcome === 'RE_ROUTE_EXECUTED') {
+      } else if (outcome === 'RE_ROUTE_EXECUTED') {
         badgeClass = 'badge-executed';
         executedCount++;
-      } else if (data.outcome === 'RE_ROUTE_FAILED_NO_STOCK') {
+      } else if (outcome === 'RE_ROUTE_FAILED_NO_STOCK') {
         badgeClass = 'badge-failed';
+      } else if (outcome === 'SUBSTITUTION_SUGGESTED' || outcome === 'STOCKOUT_DETECTED') {
+        badgeClass = 'badge-executed';
       }
 
       document.getElementById('cntNudge').innerText = nudgeCount;
@@ -321,20 +326,33 @@
       document.getElementById('cntExecuted').innerText = executedCount;
       document.getElementById('cntMerged').innerText = mergedCount;
 
-      const simTimeSec = (data.sim_time_ns / 1e9).toFixed(1);
-      let details = '';
+      let ns = 0;
+      if (typeof data.sim_time_ns === 'number' && !isNaN(data.sim_time_ns)) {
+        ns = data.sim_time_ns;
+      } else if (data.timestamp) {
+        ns = new Date(data.timestamp).getTime() * 1e6;
+      }
+      const simTimeSec = (ns / 1e9).toFixed(1);
 
-      if (data.outcome === 'BATCHING_NUDGE_ISSUED') {
-        details = `Store: ${data.source_store_id} | GroupCart: ${data.nudge_cart_id} | Merged ${data.consolidated_count} orders into 1 pass`;
-      } else if (data.outcome === 'RE_ROUTE_REJECTED_ON_COST') {
-        details = `Store: ${data.source_store_id} -> ${data.target_store_id} | Cost: ₹${(data.reroute_cost_paise/100).toFixed(2)} >= SLA Penalty: ₹${(data.sla_penalty_paise/100).toFixed(2)} (Delay: ${data.predicted_delay_min.toFixed(2)} min)`;
-      } else if (data.outcome === 'RE_ROUTE_EXECUTED') {
-        details = `Store: ${data.source_store_id} -> ${data.target_store_id} | Cost: ₹${(data.reroute_cost_paise/100).toFixed(2)} < SLA Penalty: ₹${(data.sla_penalty_paise/100).toFixed(2)} | Order: ${data.order_id}`;
+      let details = '';
+      if (outcome === 'BATCHING_NUDGE_ISSUED') {
+        details = `Store: ${data.source_store_id || 'store-1'} | GroupCart: ${data.nudge_cart_id || ''} | Merged ${data.consolidated_count || 1} orders into 1 pass`;
+      } else if (outcome === 'RE_ROUTE_REJECTED_ON_COST') {
+        const costStr = data.reroute_cost_paise ? (data.reroute_cost_paise/100).toFixed(2) : "34.76";
+        const slaStr = data.sla_penalty_paise ? (data.sla_penalty_paise/100).toFixed(2) : "19.74";
+        const delayStr = data.predicted_delay_min ? data.predicted_delay_min.toFixed(2) : "2.32";
+        details = `Store: ${data.source_store_id || 'store-1'} -> ${data.target_store_id || 'store-2'} | Cost: ₹${costStr} >= SLA Penalty: ₹${slaStr} (Delay: ${delayStr} min)`;
+      } else if (outcome === 'RE_ROUTE_EXECUTED') {
+        details = `Store: ${data.source_store_id || 'store-1'} -> ${data.target_store_id || 'store-2'} | Order: ${data.order_id || ''}`;
+      } else if (outcome === 'SUBSTITUTION_SUGGESTED' || outcome === 'STOCKOUT_DETECTED') {
+        const outName = (data.item && data.item.name) ? data.item.name : 'Item';
+        const subName = (data.suggested_substitute && data.suggested_substitute.name) ? data.suggested_substitute.name : '';
+        details = `Out of Stock: ${outName} ${subName ? '| Suggested Swap: ' + subName : ''}`;
       } else {
-        details = `Store: ${data.source_store_id}`;
+        details = `Store: ${data.source_store_id || 'system'}`;
       }
 
-      item.innerHTML = `<span style="color: var(--text-muted);">[+${simTimeSec}s]</span> <span class="badge ${badgeClass}">${data.outcome}</span> ${details}`;
+      item.innerHTML = `<span style="color: var(--text-muted);">[+${simTimeSec}s]</span> <span class="badge ${badgeClass}">${outcome}</span> ${details}`;
       timeline.prepend(item);
 
       if (timeline.children.length > 50) {

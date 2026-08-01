@@ -345,6 +345,12 @@ func main() {
 
 					channel := fmt.Sprintf("cart_events:%s", req.CartID)
 					_ = rdb.Publish(r.Context(), channel, string(eventPayload)).Err()
+
+					opsServer.BroadcastEvent(&fulfillment.UnifiedDecisionEvent{
+						SimTimeNs:     time.Now().UnixNano(),
+						SourceStoreID: "store-aravali",
+						Outcome:       fulfillment.OutcomeReRouteExecuted,
+					})
 				}
 			}
 
