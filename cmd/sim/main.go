@@ -94,6 +94,8 @@ func (s *OpsServer) BroadcastTripEvent(ev *trip.TripEvent) {
 	}
 }
 
+var activeEnginePtr atomic.Value
+
 type ScheduledOrder struct {
 	SimTimeOffset time.Duration
 	Order         *fulfillment.Order
@@ -231,6 +233,17 @@ func main() {
 		http.HandleFunc("/api/carts/item", groupCartServer.HandleAddItem)
 		http.HandleFunc("/api/carts/item/remove", groupCartServer.HandleRemoveItem)
 		http.HandleFunc("/ws/cart", groupCartServer.HandleWebSocket)
+
+		http.HandleFunc("/api/decision/metrics", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			val := activeEnginePtr.Load()
+			if val != nil {
+				eng := val.(*fulfillment.DecisionEngine)
+				json.NewEncoder(w).Encode(eng.GetSummary())
+				return
+			}
+			json.NewEncoder(w).Encode(fulfillment.UnifiedDecisionSummary{})
+		})
 
 		// Substitution Engine Endpoints
 		http.HandleFunc("/api/substitution/catalog", func(w http.ResponseWriter, r *http.Request) {
@@ -678,6 +691,7 @@ func main() {
 
 		costCfg := fulfillment.DefaultCostModelConfig()
 		engine := fulfillment.NewDecisionEngine(engineMode, costCfg, cartStore, resStore)
+		activeEnginePtr.Store(engine)
 
 		// Monitor interval scales with timeScale, bounded to a reasonable 20ms..500ms range
 		monitorInterval := time.Duration(50.0 / timeScale * float64(time.Millisecond))

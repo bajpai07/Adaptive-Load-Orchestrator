@@ -236,10 +236,20 @@
   </div>
 
   <script>
-    let nudgeCount = 0;
-    let rejectedCount = 0;
-    let executedCount = 0;
-    let mergedCount = 0;
+    async function fetchDecisionMetrics() {
+      try {
+        const resp = await fetch('/api/decision/metrics');
+        if (resp.ok) {
+          const m = await resp.json();
+          document.getElementById('cntNudge').innerText = m.batching_nudge_count || 0;
+          document.getElementById('cntRejected').innerText = m.rejected_on_cost_count || 0;
+          document.getElementById('cntExecuted').innerText = m.executed_count || 0;
+          document.getElementById('cntMerged').innerText = m.total_orders_merged || 0;
+        }
+      } catch (e) {
+        console.error("Fetch decision metrics error:", e);
+      }
+    }
 
     async function fetchSubstitutionMetrics() {
       try {
@@ -253,6 +263,7 @@
         console.error("Fetch metrics error:", e);
       }
     }
+    setInterval(fetchDecisionMetrics, 2000);
     setInterval(fetchSubstitutionMetrics, 3000);
 
     async function toggleStockout(itemName) {
@@ -282,6 +293,8 @@
         wsDot.classList.add('connected');
         wsText.innerText = 'Live Engine Connected';
         timeline.innerHTML = '';
+        fetchDecisionMetrics();
+        fetchSubstitutionMetrics();
       };
 
       ws.onclose = () => {
@@ -307,32 +320,34 @@
 
       if (outcome === 'BATCHING_NUDGE_ISSUED') {
         badgeClass = 'badge-nudge';
-        nudgeCount++;
-        if (data.consolidated_count) mergedCount += data.consolidated_count;
       } else if (outcome === 'RE_ROUTE_REJECTED_ON_COST') {
         badgeClass = 'badge-rejected';
-        rejectedCount++;
       } else if (outcome === 'RE_ROUTE_EXECUTED') {
         badgeClass = 'badge-executed';
-        executedCount++;
       } else if (outcome === 'RE_ROUTE_FAILED_NO_STOCK') {
         badgeClass = 'badge-failed';
       } else if (outcome === 'SUBSTITUTION_SUGGESTED' || outcome === 'STOCKOUT_DETECTED') {
         badgeClass = 'badge-executed';
+      } else if (outcome === 'TRIP_AVAILABLE' || outcome === 'TRIP_UPDATED' || outcome === 'TRIP_DISCOUNT_CHANGED' || outcome === 'TRIP_COMPLETED') {
+        badgeClass = 'badge-nudge';
       }
 
-      document.getElementById('cntNudge').innerText = nudgeCount;
-      document.getElementById('cntRejected').innerText = rejectedCount;
-      document.getElementById('cntExecuted').innerText = executedCount;
-      document.getElementById('cntMerged').innerText = mergedCount;
+      fetchDecisionMetrics();
 
-      let ns = 0;
-      if (typeof data.sim_time_ns === 'number' && !isNaN(data.sim_time_ns)) {
-        ns = data.sim_time_ns;
+      let simTimeSec = "0.0";
+      if (typeof data.sim_time_ns === 'number' && !isNaN(data.sim_time_ns) && data.sim_time_ns < 1e14) {
+        simTimeSec = (data.sim_time_ns / 1e9).toFixed(1);
+        if (!window.simReferenceEpoch) {
+          window.simReferenceEpoch = Date.now() - (data.sim_time_ns / 1e6);
+        }
       } else if (data.timestamp) {
-        ns = new Date(data.timestamp).getTime() * 1e6;
+        const eventEpochMs = new Date(data.timestamp).getTime();
+        if (!window.simReferenceEpoch) {
+          window.simReferenceEpoch = eventEpochMs;
+        }
+        const elapsedMs = Math.max(0, eventEpochMs - window.simReferenceEpoch);
+        simTimeSec = (elapsedMs / 1000).toFixed(1);
       }
-      const simTimeSec = (ns / 1e9).toFixed(1);
 
       let details = '';
       if (outcome === 'BATCHING_NUDGE_ISSUED') {
@@ -348,6 +363,11 @@
         const outName = (data.item && data.item.name) ? data.item.name : 'Item';
         const subName = (data.suggested_substitute && data.suggested_substitute.name) ? data.suggested_substitute.name : '';
         details = `Out of Stock: ${outName} ${subName ? '| Suggested Swap: ' + subName : ''}`;
+      } else if (outcome === 'TRIP_AVAILABLE' || outcome === 'TRIP_UPDATED' || outcome === 'TRIP_DISCOUNT_CHANGED' || outcome === 'TRIP_COMPLETED') {
+        const geofence = data.geofence_name || data.geofence_id || data.source_store_id || 'system';
+        const rider = data.rider_name || 'Rahul Sharma';
+        const fee = data.current_delivery_fee_paise !== undefined ? `₹${(data.current_delivery_fee_paise/100).toFixed(2)}` : '₹35.00';
+        details = `Geofence: ${geofence} | Rider: ${rider} | Pooled Fee: ${fee}`;
       } else {
         details = `Store: ${data.source_store_id || 'system'}`;
       }
@@ -360,7 +380,11 @@
       }
     }
 
-    window.onload = connectWS;
+    window.onload = () => {
+      connectWS();
+      fetchDecisionMetrics();
+      fetchSubstitutionMetrics();
+    };
   </script>
 </body>
 </html>
