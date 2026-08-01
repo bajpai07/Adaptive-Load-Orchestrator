@@ -1667,10 +1667,210 @@
                     </div>
                 </div>
 
+                <button class="proceed-checkout-btn" id="proceed-to-checkout-btn" onclick="openCheckoutSummary()" style="display: none; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.98rem; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); margin-bottom: 8px; transition: all 0.2s ease;">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <span>🛍️</span> Proceed to Checkout
+                    </span>
+                    <span id="checkout-payable-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: 800;">₹0.00 →</span>
+                </button>
+
                 <button class="add-item-action-btn" id="cart-drawer-action-btn" onclick="closeCartDrawer()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: all 0.2s ease;">
                     <span>Add More Items from Store</span>
                     <span id="footer-cart-total-badge" style="background: rgba(255, 255, 255, 0.22); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;">Total: ₹0.00</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- 12. Checkout Summary Screen Overlay -->
+        <div class="overlay-screen" id="checkout-summary-screen">
+            <div class="overlay-header">
+                <button class="back-btn" onclick="closeCheckoutSummary()">←</button>
+                <div class="overlay-title">
+                    <h2>Order Summary</h2>
+                    <p>Review items & delivery address</p>
+                </div>
+            </div>
+
+            <div class="overlay-content" style="padding-bottom: 90px;">
+                <!-- Address Confirmation Card -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 1.4rem; background: rgba(124, 58, 237, 0.1); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--zepto-purple-bright);">📍</div>
+                        <div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Delivering to</div>
+                            <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-dark);">Aravali Heights, Tower B</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Flat 304 • Vikram Kumar</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--zepto-purple-bright); background: rgba(124, 58, 237, 0.08); padding: 4px 8px; border-radius: 6px;">Home</span>
+                </div>
+
+                <!-- Itemized Bill Summary Card -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;">
+                        🛒 Item Breakdown
+                    </div>
+                    <div id="checkout-items-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                        <!-- Rendered dynamically -->
+                    </div>
+
+                    <div style="height: 1px; background: var(--border-light); margin: 10px 0;"></div>
+
+                    <!-- Bill Details -->
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between; color: var(--text-dark);">
+                            <span>Item Total</span>
+                            <span id="checkout-item-total" style="font-weight: 700;">₹0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--text-dark);">
+                            <span>Delivery Fee (Rider Trip Pool)</span>
+                            <span id="checkout-delivery-fee" style="font-weight: 700; color: var(--green-success);">FREE (₹0.00)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--text-dark);">
+                            <span>Handling & Surge Fee</span>
+                            <span style="font-weight: 700; color: var(--green-success);">₹0.00</span>
+                        </div>
+
+                        <div style="height: 1px; background: var(--border-light); margin: 6px 0;"></div>
+
+                        <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: 900; color: var(--text-dark);">
+                            <span>To Pay</span>
+                            <span id="checkout-payable-total" style="color: var(--zepto-purple-bright);">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky Bottom Bar -->
+                <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 16px; background: white; border-top: 1px solid var(--border-light); box-sizing: border-box; z-index: 1200;">
+                    <button onclick="openPaymentScreen()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Pay Now</span>
+                        <span id="pay-now-btn-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00 →</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. Fake Payment Screen Overlay -->
+        <div class="overlay-screen" id="payment-screen">
+            <div class="overlay-header">
+                <button class="back-btn" onclick="closePaymentScreen()">←</button>
+                <div class="overlay-title">
+                    <h2>Select Payment Method</h2>
+                    <p>Fast & secure 1-click payment</p>
+                </div>
+            </div>
+
+            <div class="overlay-content" style="padding-bottom: 90px;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                        💳 Payment Options
+                    </div>
+
+                    <!-- Payment Options List -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Option 1: UPI -->
+                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1.5px solid var(--zepto-purple-bright); background: rgba(124, 58, 237, 0.05); border-radius: 12px; cursor: pointer;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="radio" name="payment-method-opt" value="UPI (Google Pay / PhonePe)" checked style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">UPI (Google Pay / PhonePe / Paytm)</div>
+                                    <div style="font-size: 0.72rem; color: var(--green-success); font-weight: 600;">⚡ Instant Approval</div>
+                                </div>
+                            </div>
+                            <span style="font-size: 1.2rem;">🟣</span>
+                        </label>
+
+                        <!-- Option 2: Card -->
+                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border-light); border-radius: 12px; cursor: pointer;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="radio" name="payment-method-opt" value="Credit / Debit Card" style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">Credit / Debit Card</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted);">Visa, Mastercard, RuPay</div>
+                                </div>
+                            </div>
+                            <span style="font-size: 1.2rem;">💳</span>
+                        </label>
+
+                        <!-- Option 3: COD -->
+                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border-light); border-radius: 12px; cursor: pointer;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="radio" name="payment-method-opt" value="Cash on Delivery" style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">Cash on Delivery</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted);">Pay upon delivery</div>
+                                </div>
+                            </div>
+                            <span style="font-size: 1.2rem;">💵</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Simulated Loading State (Hidden by default) -->
+                <div id="payment-loading-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px; text-align: center;">
+                    <div style="width: 48px; height: 48px; border: 4px solid rgba(124, 58, 237, 0.2); border-top-color: var(--zepto-purple-bright); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;"></div>
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-dark);">Processing Payment...</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Securing your order with dark store fulfillment</p>
+                </div>
+
+                <!-- Sticky Bottom Bar -->
+                <div id="payment-action-container" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 16px; background: white; border-top: 1px solid var(--border-light); box-sizing: border-box; z-index: 1200;">
+                    <button onclick="processFakePayment()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Confirm & Pay</span>
+                        <span id="confirm-pay-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. Order Success Screen Overlay -->
+        <div class="overlay-screen" id="order-success-screen" style="background: linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%); color: white;">
+            <div class="overlay-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; padding: 24px;">
+                
+                <!-- Celebratory Animated Checkmark Circle -->
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 20px; box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); animation: pulseScale 1.2s ease-out infinite alternate;">
+                    ✓
+                </div>
+
+                <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, #34D399, #A7F3D0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;">
+                    Order Placed! 🎉
+                </h1>
+                <p style="font-size: 0.88rem; color: #94A3B8; margin-bottom: 24px; max-width: 320px; line-height: 1.4;">
+                    Your items have been dispatched to Rahul Sharma's delivery trip!
+                </p>
+
+                <!-- Order Info Card -->
+                <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 18px; width: 100%; max-width: 380px; margin-bottom: 24px; box-sizing: border-box; backdrop-filter: blur(10px);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="font-size: 0.75rem; color: #94A3B8; font-weight: 700; letter-spacing: 0.5px;">ESTIMATED DELIVERY</span>
+                        <span style="font-weight: 900; font-size: 1.05rem; color: #34D399; display: flex; align-items: center; gap: 4px;">⚡ 14 MINS</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem;">
+                        <span style="color: #94A3B8;">Order ID</span>
+                        <span id="success-order-id" style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #F8FAFC;">ZP-849201</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem;">
+                        <span style="color: #94A3B8;">Delivery Location</span>
+                        <span style="font-weight: 700; color: #F8FAFC;">Aravali Heights, Tower B</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                        <span style="color: #94A3B8;">Amount Paid</span>
+                        <span id="success-amount-paid" style="font-weight: 800; color: #34D399;">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 380px;">
+                    <button onclick="openScreenB(); closeOrderSuccess();" style="width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                        Track Rider Trip 🛵
+                    </button>
+                    <button onclick="closeOrderSuccess();" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: rgba(255, 255, 255, 0.08); color: #E2E8F0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; cursor: pointer;">
+                        Back to Home 🏠
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -2029,6 +2229,19 @@
             const footerBadge = document.getElementById('footer-cart-total-badge');
             if (footerBadge) {
                 footerBadge.innerText = `Your: ₹${userFormatted} • Group: ₹${groupFormatted}`;
+            }
+
+            const checkoutBtn = document.getElementById('proceed-to-checkout-btn');
+            const checkoutBadge = document.getElementById('checkout-payable-badge');
+            if (checkoutBtn) {
+                if (items.length > 0) {
+                    checkoutBtn.style.display = 'flex';
+                    if (checkoutBadge) {
+                        checkoutBadge.innerText = `₹${groupFormatted} →`;
+                    }
+                } else {
+                    checkoutBtn.style.display = 'none';
+                }
             }
 
             const targetPaise = 20000; // ₹200 threshold
@@ -2707,6 +2920,165 @@
                 }
                 grid.appendChild(emptyCard);
             }
+        }
+
+        let lastPayablePaise = 0;
+
+        function openCheckoutSummary() {
+            closeCartDrawer();
+            const summaryScreen = document.getElementById('checkout-summary-screen');
+            const itemsListEl = document.getElementById('checkout-items-list');
+            const itemTotalEl = document.getElementById('checkout-item-total');
+            const deliveryFeeEl = document.getElementById('checkout-delivery-fee');
+            const payableTotalEl = document.getElementById('checkout-payable-total');
+            const payNowBadgeEl = document.getElementById('pay-now-btn-badge');
+
+            if (!summaryScreen || !itemsListEl) return;
+
+            const cart = window.lastCartData || { items: [] };
+            const items = cart.items || [];
+
+            // Populate Item breakdown
+            itemsListEl.innerHTML = '';
+            let itemTotalPaise = 0;
+
+            const groupedItems = {};
+            items.forEach(item => {
+                itemTotalPaise += item.price_paise;
+                const adderID = item.added_by_member_id || memberID;
+                const key = `${item.name}___${adderID}`;
+                if (!groupedItems[key]) {
+                    groupedItems[key] = {
+                        name: item.name,
+                        price_paise: item.price_paise,
+                        adderID: adderID,
+                        count: 0
+                    };
+                }
+                groupedItems[key].count++;
+            });
+
+            Object.values(groupedItems).forEach(group => {
+                const row = document.createElement('div');
+                row.style.cssText = "display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; color: var(--text-dark);";
+                const totalRowPrice = (group.count * group.price_paise / 100).toFixed(2);
+                const displayName = group.count > 1 ? `${group.name} × ${group.count}` : group.name;
+                row.innerHTML = `
+                    <span>${displayName}</span>
+                    <span style="font-weight: 700;">₹${totalRowPrice}</span>
+                `;
+                itemsListEl.appendChild(row);
+            });
+
+            // Delivery Fee calculation (Respecting ₹0 fee logic)
+            let deliveryFeePaise = 0;
+            if (currentTripData && currentTripData.current_delivery_fee_paise !== undefined) {
+                deliveryFeePaise = currentTripData.current_delivery_fee_paise;
+            }
+
+            const payablePaise = itemTotalPaise + deliveryFeePaise;
+            lastPayablePaise = payablePaise;
+
+            if (itemTotalEl) itemTotalEl.innerText = `₹${(itemTotalPaise / 100).toFixed(2)}`;
+            if (deliveryFeeEl) {
+                if (deliveryFeePaise === 0) {
+                    deliveryFeeEl.innerText = 'FREE (₹0.00)';
+                    deliveryFeeEl.style.color = 'var(--green-success)';
+                } else {
+                    deliveryFeeEl.innerText = `₹${(deliveryFeePaise / 100).toFixed(2)}`;
+                    deliveryFeeEl.style.color = 'var(--text-dark)';
+                }
+            }
+            if (payableTotalEl) payableTotalEl.innerText = `₹${(payablePaise / 100).toFixed(2)}`;
+            if (payNowBadgeEl) payNowBadgeEl.innerText = `₹${(payablePaise / 100).toFixed(2)} →`;
+
+            summaryScreen.classList.add('active');
+        }
+
+        function closeCheckoutSummary() {
+            const summaryScreen = document.getElementById('checkout-summary-screen');
+            if (summaryScreen) summaryScreen.classList.remove('active');
+        }
+
+        function openPaymentScreen() {
+            const paymentScreen = document.getElementById('payment-screen');
+            const confirmPayBadge = document.getElementById('confirm-pay-badge');
+            const loadingState = document.getElementById('payment-loading-state');
+            const actionContainer = document.getElementById('payment-action-container');
+
+            if (!paymentScreen) return;
+
+            if (loadingState) loadingState.style.display = 'none';
+            if (actionContainer) actionContainer.style.display = 'block';
+            if (confirmPayBadge) confirmPayBadge.innerText = `₹${(lastPayablePaise / 100).toFixed(2)}`;
+
+            paymentScreen.classList.add('active');
+        }
+
+        function closePaymentScreen() {
+            const paymentScreen = document.getElementById('payment-screen');
+            if (paymentScreen) paymentScreen.classList.remove('active');
+        }
+
+        async function processFakePayment() {
+            const loadingState = document.getElementById('payment-loading-state');
+            const actionContainer = document.getElementById('payment-action-container');
+
+            if (loadingState) loadingState.style.display = 'flex';
+            if (actionContainer) actionContainer.style.display = 'none';
+
+            // Get selected payment method
+            const selectedOpt = document.querySelector('input[name="payment-method-opt"]:checked');
+            const methodLabel = selectedOpt ? selectedOpt.value : "UPI";
+
+            setTimeout(async () => {
+                // Post-Checkout Cleanup: Clear logged in user's items ONLY
+                const cart = window.lastCartData;
+                if (cart && cart.items) {
+                    const ownItems = cart.items.filter(i => 
+                        !i.added_by_member_id || 
+                        i.added_by_member_id === memberID || 
+                        i.added_by_member_id === "mem-web-304" || 
+                        i.added_by_member_id === "mem-creator"
+                    );
+
+                    for (const item of ownItems) {
+                        try {
+                            await removeItemFromCart(item.name, item.price_paise);
+                        } catch (e) {
+                            console.error("Cleanup item error:", e);
+                        }
+                    }
+                }
+
+                // Reset user cart total display to ₹0.00
+                const userTotalEl = document.getElementById('user-cart-total');
+                if (userTotalEl) userTotalEl.innerText = "₹0.00";
+
+                // Generate Order ID & Amount
+                const orderID = "ZP-" + Math.floor(100000 + Math.random() * 900000);
+                const orderIdEl = document.getElementById('success-order-id');
+                const amountPaidEl = document.getElementById('success-amount-paid');
+
+                if (orderIdEl) orderIdEl.innerText = orderID;
+                if (amountPaidEl) amountPaidEl.innerText = `₹${(lastPayablePaise / 100).toFixed(2)} (${methodLabel})`;
+
+                closePaymentScreen();
+                closeCheckoutSummary();
+
+                const successScreen = document.getElementById('order-success-screen');
+                if (successScreen) successScreen.classList.add('active');
+
+                if (loadingState) loadingState.style.display = 'none';
+                if (actionContainer) actionContainer.style.display = 'block';
+
+                showToast(`🎉 Order ${orderID} placed successfully!`, "🎉", 4000);
+            }, 1800);
+        }
+
+        function closeOrderSuccess() {
+            const successScreen = document.getElementById('order-success-screen');
+            if (successScreen) successScreen.classList.remove('active');
         }
 
         function escapeHtml(str) {
