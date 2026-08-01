@@ -50,21 +50,33 @@ type GroupCart struct {
 type EventType string
 
 const (
-	EventCartUpdated   EventType = "CART_UPDATED"
-	EventCartUnlocked  EventType = "CART_UNLOCKED"
-	EventCartFinalized EventType = "CART_FINALIZED"
-	EventMemberJoined  EventType = "MEMBER_JOINED"
+	EventCartUpdated           EventType = "CART_UPDATED"
+	EventCartUnlocked          EventType = "CART_UNLOCKED"
+	EventCartFinalized         EventType = "CART_FINALIZED"
+	EventMemberJoined          EventType = "MEMBER_JOINED"
+	EventSubstitutionSuggested EventType = "SUBSTITUTION_SUGGESTED"
 )
 
+type SubstitutePayload struct {
+	SKU               string  `json:"sku"`
+	Name              string  `json:"name"`
+	PricePaise        int64   `json:"price_paise"`
+	Category          string  `json:"category"`
+	Brand             string  `json:"brand"`
+	TotalScore        float64 `json:"total_score"`
+	ExplanationReason string  `json:"explanation_reason"`
+}
+
 type CartEvent struct {
-	Type                 EventType  `json:"type"`
-	CartID               string     `json:"cart_id"`
-	MemberID             string     `json:"member_id,omitempty"`
-	Item                 *CartItem  `json:"item,omitempty"`
-	Cart                 *GroupCart `json:"cart,omitempty"`
-	TotalPaise           int64      `json:"total_paise"`
-	UnlockThresholdPaise int64      `json:"unlock_threshold_paise"`
-	Unlocked             bool       `json:"unlocked"`
-	Status               CartStatus `json:"status,omitempty"`
-	Timestamp            time.Time  `json:"timestamp"`
+	Type                 EventType          `json:"type"`
+	CartID               string             `json:"cart_id"`
+	MemberID             string             `json:"member_id,omitempty"`
+	Item                 *CartItem          `json:"item,omitempty"`
+	Cart                 *GroupCart         `json:"cart,omitempty"`
+	SuggestedSubstitute  *SubstitutePayload `json:"suggested_substitute,omitempty"`
+	TotalPaise           int64              `json:"total_paise"`
+	UnlockThresholdPaise int64              `json:"unlock_threshold_paise"`
+	Unlocked             bool               `json:"unlocked"`
+	Status               CartStatus         `json:"status,omitempty"`
+	Timestamp            time.Time          `json:"timestamp"`
 }

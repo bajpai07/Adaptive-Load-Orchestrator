@@ -211,6 +211,7 @@ func main() {
 	cartStore := groupcart.NewRedisCartStore(rdb)
 	resStore := fulfillment.NewStockReservationStore(rdb)
 	tripStore := trip.NewRedisTripStore(rdb)
+	subEngine := fulfillment.NewSubstitutionEngine()
 
 	// Start Ops WebSocket & Group Cart API Server (runs indefinitely)
 	opsServer := NewOpsServer()
@@ -230,6 +231,160 @@ func main() {
 		http.HandleFunc("/api/carts/item", groupCartServer.HandleAddItem)
 		http.HandleFunc("/api/carts/item/remove", groupCartServer.HandleRemoveItem)
 		http.HandleFunc("/ws/cart", groupCartServer.HandleWebSocket)
+
+		// Substitution Engine Endpoints
+		http.HandleFunc("/api/substitution/catalog", func(w http.ResponseWriter, r *http.Request) {
+			catalog := subEngine.GetCatalog()
+			type CatalogResponse struct {
+				SKU                 string                              `json:"sku"`
+				Name                string                              `json:"name"`
+				Category            string                              `json:"category"`
+				Brand               string                              `json:"brand"`
+				PricePaise          int64                               `json:"price_paise"`
+				StockQuantity       int                                 `json:"stock_quantity"`
+				IsOutOfStock        bool                                `json:"is_out_of_stock"`
+				SuggestedSubstitute *fulfillment.SubstitutionScoreResult `json:"suggested_substitute,omitempty"`
+			}
+			resp := make([]CatalogResponse, 0, len(catalog))
+			for _, item := range catalog {
+				cr := CatalogResponse{
+					SKU:           item.SKU,
+					Name:          item.Name,
+					Category:      item.Category,
+					Brand:         item.Brand,
+					PricePaise:    item.PricePaise,
+					StockQuantity: item.StockQuantity,
+					IsOutOfStock:  item.StockQuantity <= 0,
+				}
+				if item.StockQuantity <= 0 {
+					if sub, ok := subEngine.FindBestSubstitute(item.SKU); ok {
+						cr.SuggestedSubstitute = sub
+					}
+				}
+				resp = append(resp, cr)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp)
+		})
+
+		http.HandleFunc("/api/substitution/suggest", func(w http.ResponseWriter, r *http.Request) {
+			query := r.URL.Query().Get("identifier")
+			if query == "" {
+				query = r.URL.Query().Get("sku")
+			}
+			if query == "" {
+				query = r.URL.Query().Get("name")
+			}
+			if query == "" {
+				query = "Farm Fresh Eggs (6-pack)"
+			}
+
+			match, ok := subEngine.FindBestSubstitute(query)
+			if !ok {
+				http.Error(w, `{"error":"No substitute found"}`, http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(match)
+		})
+
+		http.HandleFunc("/api/stock/update", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			var req struct {
+				Identifier string `json:"identifier"`
+				Stock      int    `json:"stock_quantity"`
+				CartID     string `json:"cart_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if req.Identifier == "" {
+				req.Identifier = "Farm Fresh Eggs (6-pack)"
+			}
+			if req.CartID == "" {
+				req.CartID = "cart-group-aravali"
+			}
+
+			item, ok := subEngine.UpdateStock(req.Identifier, req.Stock)
+			if !ok {
+				http.Error(w, `{"error":"Item not found"}`, http.StatusNotFound)
+				return
+			}
+
+			// Broadcast SUBSTITUTION_SUGGESTED over WebSocket if stock is 0
+			var scoreRes *fulfillment.SubstitutionScoreResult
+			if req.Stock <= 0 {
+				if sub, found := subEngine.FindBestSubstitute(item.SKU); found {
+					scoreRes = sub
+
+					subPayload := &groupcart.SubstitutePayload{
+						SKU:               sub.Substitute.SKU,
+						Name:              sub.Substitute.Name,
+						PricePaise:        sub.Substitute.PricePaise,
+						Category:          sub.Substitute.Category,
+						Brand:             sub.Substitute.Brand,
+						TotalScore:        sub.TotalScore,
+						ExplanationReason: sub.ExplanationReason,
+					}
+
+					eventPayload, _ := json.Marshal(&groupcart.CartEvent{
+						Type:   groupcart.EventSubstitutionSuggested,
+						CartID: req.CartID,
+						Item: &groupcart.CartItem{
+							SKU:        item.SKU,
+							Name:       item.Name,
+							PricePaise: item.PricePaise,
+						},
+						SuggestedSubstitute: subPayload,
+						Timestamp:           time.Now(),
+					})
+
+					channel := fmt.Sprintf("cart_events:%s", req.CartID)
+					_ = rdb.Publish(r.Context(), channel, string(eventPayload)).Err()
+				}
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":               "ok",
+				"item":                 item,
+				"suggested_substitute": scoreRes,
+			})
+		})
+
+		http.HandleFunc("/api/substitution/action", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			var req struct {
+				Action string `json:"action"` // "accept" or "reject"
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			stkCount, accCount, ratePct := subEngine.RecordAction(req.Action)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":                   "ok",
+				"action":                   req.Action,
+				"stockout_events_today":    stkCount,
+				"substitution_accept_count": accCount,
+				"accept_rate_pct":          ratePct,
+			})
+		})
+
+		http.HandleFunc("/api/substitution/metrics", func(w http.ResponseWriter, r *http.Request) {
+			metrics := subEngine.GetMetrics()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(metrics)
+		})
 
 		// Phase 5 Rider Trip Endpoints
 		http.HandleFunc("/api/trips/join", func(w http.ResponseWriter, r *http.Request) {

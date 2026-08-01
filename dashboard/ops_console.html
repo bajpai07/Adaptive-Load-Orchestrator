@@ -157,7 +157,7 @@
     </div>
   </header>
 
-  <div class="counter-grid">
+  <div class="counter-grid" style="grid-template-columns: repeat(6, 1fr);">
     <div class="counter-card">
       <div style="font-size: 12px; color: var(--text-muted);">Batching Nudges</div>
       <div id="cntNudge" class="counter-value" style="color: var(--accent-green);">0</div>
@@ -173,6 +173,14 @@
     <div class="counter-card">
       <div style="font-size: 12px; color: var(--text-muted);">Orders Consolidated</div>
       <div id="cntMerged" class="counter-value" style="color: var(--accent-cyan);">0</div>
+    </div>
+    <div class="counter-card" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.05);">
+      <div style="font-size: 12px; color: var(--text-muted);">Stockout Events Today</div>
+      <div id="cntStockouts" class="counter-value" style="color: var(--accent-red);">2</div>
+    </div>
+    <div class="counter-card" style="border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+      <div style="font-size: 12px; color: var(--text-muted);">Substitution Accept Rate</div>
+      <div id="cntAcceptRate" class="counter-value" style="color: var(--accent-green);">0%</div>
     </div>
   </div>
 
@@ -214,6 +222,16 @@
           </tbody>
         </table>
       </div>
+
+      <div class="card" style="border: 1px dashed rgba(239, 68, 68, 0.4);">
+        <div class="card-header" style="color: #F87171;">🤖 Stockout Simulation Controls</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.3;">Simulate live SKU stockout events across the network to trigger WebSocket recommendations:</p>
+          <button onclick="toggleStockout('Farm Fresh Eggs (6-pack)')" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #EF4444; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;">⚡ Toggle Stockout: Farm Fresh Eggs</button>
+          <button onclick="toggleStockout('Amul Masti Dahi (400g)')" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #EF4444; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;">⚡ Toggle Stockout: Amul Masti Dahi</button>
+          <button onclick="toggleStockout('Coca-Cola Bottle (750ml)')" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #EF4444; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;">⚡ Toggle Stockout: Coca-Cola Bottle</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -222,6 +240,36 @@
     let rejectedCount = 0;
     let executedCount = 0;
     let mergedCount = 0;
+
+    async function fetchSubstitutionMetrics() {
+      try {
+        const resp = await fetch('/api/substitution/metrics');
+        if (resp.ok) {
+          const metrics = await resp.json();
+          document.getElementById('cntStockouts').innerText = metrics.stockout_events_today || 0;
+          document.getElementById('cntAcceptRate').innerText = (metrics.accept_rate_pct || 0) + '%';
+        }
+      } catch (e) {
+        console.error("Fetch metrics error:", e);
+      }
+    }
+    setInterval(fetchSubstitutionMetrics, 3000);
+
+    async function toggleStockout(itemName) {
+      try {
+        const resp = await fetch('/api/stock/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: itemName, stock_quantity: 0, cart_id: 'cart-group-aravali' })
+        });
+        if (resp.ok) {
+          fetchSubstitutionMetrics();
+          alert(`⚡ Simulated Stockout for "${itemName}"! WebSocket event broadcasted.`);
+        }
+      } catch (e) {
+        console.error("Toggle stockout error:", e);
+      }
+    }
 
     function connectWS() {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
