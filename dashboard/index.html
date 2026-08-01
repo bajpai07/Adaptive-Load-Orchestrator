@@ -2491,10 +2491,28 @@
                         }
                     }
 
-                    const price = (orderPaise / 100).toFixed(2);
-                    
                     const isSelf = (m.member_id === memberID || m.member_id === "mem-web-304");
                     const nameLabel = isSelf ? `${m.display_name || "Vikram Kumar"} <span class="you-pill-badge">(You)</span>` : (m.display_name || "Member");
+
+                    // Paid Order Detection for Trip List (Issue 1)
+                    let isPaidOrder = false;
+                    let paidAmountPaise = 0;
+                    if (isSelf && window.orderHistory && window.orderHistory.length > 0 && orderPaise === 0) {
+                        const latestOrder = window.orderHistory[0];
+                        if (latestOrder) {
+                            isPaidOrder = true;
+                            paidAmountPaise = latestOrder.payablePaise || latestOrder.itemTotalPaise;
+                            if (latestOrder.items && latestOrder.items.length > 0) {
+                                itemSummaryText = formatItemsSummary(latestOrder.items.map(i => i.name));
+                            }
+                        }
+                    }
+
+                    let priceDisplayHTML = `<div class="member-price">₹${(orderPaise / 100).toFixed(2)}</div>`;
+                    if (isPaidOrder) {
+                        const paidFormatted = (paidAmountPaise / 100).toFixed(2);
+                        priceDisplayHTML = `<div class="member-price" style="color: var(--green-success); font-weight: 800; font-size: 0.82rem;">₹${paidFormatted} — Paid ✓</div>`;
+                    }
 
                     return `
                         <li class="member-row">
@@ -2506,7 +2524,7 @@
                                     <div class="member-items">${itemSummaryText}</div>
                                 </div>
                             </div>
-                            <div class="member-price">₹${price}</div>
+                            ${priceDisplayHTML}
                         </li>
                     `;
                 }).join('');
@@ -3077,7 +3095,9 @@
                 deliveryFeePaise: deliveryFeePaise,
                 payablePaise: payablePaise,
                 timestamp: timeStr,
-                dateStr: dateStr
+                dateStr: dateStr,
+                createdAt: now.getTime(),
+                etaMinutes: 14
             };
 
             const formattedOwnTotal = (itemTotalPaise / 100).toFixed(2);
@@ -3177,7 +3197,9 @@
             const session = window.activeCheckoutSession || {
                 orderId: "ZP-" + Math.floor(100000 + Math.random() * 900000),
                 items: [],
-                payablePaise: lastPayablePaise
+                payablePaise: lastPayablePaise,
+                createdAt: Date.now(),
+                etaMinutes: 14
             };
 
             setTimeout(async () => {
@@ -3211,6 +3233,11 @@
                     localStorage.setItem('zepto_order_history', JSON.stringify(window.orderHistory));
                 } catch (e) {}
                 updateOrderHistoryBadge();
+
+                // Refresh Screen B (Group Trip Page) so Paid badge displays immediately
+                if (currentTripData) {
+                    renderTripUI(currentTripData);
+                }
 
                 // Populate Order Success Details from Immutable Session
                 const orderIdEl = document.getElementById('success-order-id');
@@ -3278,6 +3305,33 @@
             }
         }
 
+        function getOrderStatus(order) {
+            if (!order || !order.createdAt) {
+                return { text: "✓ Delivered", color: "var(--green-success)", bg: "rgba(16, 185, 129, 0.12)", border: "rgba(16, 185, 129, 0.3)" };
+            }
+
+            const elapsedMs = Date.now() - order.createdAt;
+            const elapsedSec = elapsedMs / 1000;
+            
+            // Total simulated delivery duration: 90 seconds (1.5 minutes demo progression)
+            const totalSimSec = 90;
+
+            if (elapsedSec >= totalSimSec) {
+                return { text: "✓ Delivered", color: "var(--green-success)", bg: "rgba(16, 185, 129, 0.12)", border: "rgba(16, 185, 129, 0.3)" };
+            } else {
+                const remainingSimSec = totalSimSec - elapsedSec;
+                const remainingEtaMin = Math.max(1, Math.ceil((remainingSimSec / totalSimSec) * (order.etaMinutes || 14)));
+                
+                if (elapsedSec < 25) {
+                    return { text: `🛵 Dispatching (~${remainingEtaMin} min)`, color: "#F59E0B", bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.35)" };
+                } else if (elapsedSec < 65) {
+                    return { text: `🛵 En Route (~${remainingEtaMin} min)`, color: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)", border: "rgba(59, 130, 246, 0.35)" };
+                } else {
+                    return { text: `🛵 Reaching Lift Lobby (~${remainingEtaMin} min)`, color: "#A855F7", bg: "rgba(168, 85, 247, 0.15)", border: "rgba(168, 85, 247, 0.35)" };
+                }
+            }
+        }
+
         function renderOrderHistory() {
             const container = document.getElementById('order-history-container');
             if (!container) return;
@@ -3316,14 +3370,16 @@
                     `;
                 });
 
+                const statusInfo = getOrderStatus(order);
+
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-light);">
                         <div>
                             <div style="font-weight: 900; font-size: 0.95rem; color: var(--zepto-purple-bright); font-family: 'JetBrains Mono', monospace;">${order.orderId}</div>
                             <div style="font-size: 0.73rem; color: var(--text-muted); font-weight: 600;">${order.dateStr || ''} • ${order.timestamp || ''}</div>
                         </div>
-                        <div style="background: rgba(16, 185, 129, 0.12); color: var(--green-success); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 4px 10px; font-size: 0.72rem; font-weight: 800;">
-                            ✓ Delivered
+                        <div style="background: ${statusInfo.bg}; color: ${statusInfo.color}; border: 1px solid ${statusInfo.border}; border-radius: 20px; padding: 4px 10px; font-size: 0.72rem; font-weight: 800;">
+                            ${statusInfo.text}
                         </div>
                     </div>
                     <div style="margin-bottom: 12px;">
