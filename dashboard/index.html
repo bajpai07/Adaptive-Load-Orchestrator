@@ -1571,6 +1571,11 @@
                 <span class="nav-icon">🛵</span>
                 <span>Group Trip</span>
             </div>
+            <div class="nav-item" onclick="openOrderHistoryScreen()">
+                <span class="nav-icon">📜</span>
+                <span>Orders</span>
+                <span class="nav-badge" id="order-history-badge" style="background: var(--zepto-purple-bright); display: none;">0</span>
+            </div>
             <a class="nav-item" href="ops_console.html" target="_blank">
                 <span class="nav-icon">📊</span>
                 <span>Ops Console</span>
@@ -1866,9 +1871,21 @@
                         <span style="font-weight: 700; color: #F8FAFC;">Aravali Heights, Tower B</span>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem;">
                         <span style="color: #94A3B8;">Amount Paid</span>
                         <span id="success-amount-paid" style="font-weight: 800; color: #34D399;">₹0.00</span>
+                    </div>
+
+                    <div style="height: 1px; background: rgba(255, 255, 255, 0.1); margin: 12px 0;"></div>
+
+                    <!-- Itemized Ordered Items Snapshot -->
+                    <div style="text-align: left;">
+                        <div style="font-size: 0.72rem; color: #94A3B8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                            🛒 ORDERED ITEMS SNAPSHOT
+                        </div>
+                        <div id="success-items-list" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
+                            <!-- Rendered dynamically from activeCheckoutSession -->
+                        </div>
                     </div>
                 </div>
 
@@ -1877,9 +1894,29 @@
                     <button onclick="openScreenB(); closeOrderSuccess();" style="width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
                         Track Rider Trip 🛵
                     </button>
+                    <button onclick="openOrderHistoryScreen(); closeOrderSuccess();" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: rgba(124, 58, 237, 0.25); color: #A7F3D0; border: 1px solid rgba(124, 58, 237, 0.5); border-radius: 12px; cursor: pointer;">
+                        View Order History 📜
+                    </button>
                     <button onclick="closeOrderSuccess();" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: rgba(255, 255, 255, 0.08); color: #E2E8F0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; cursor: pointer;">
                         Back to Home 🏠
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15. Order History Screen Overlay -->
+        <div class="overlay-screen" id="order-history-screen">
+            <div class="overlay-header">
+                <button class="back-btn" onclick="closeOrderHistoryScreen()">←</button>
+                <div class="overlay-title">
+                    <h2>Order History</h2>
+                    <p>Past placed orders & item receipts</p>
+                </div>
+            </div>
+
+            <div class="overlay-content" style="padding-bottom: 40px;">
+                <div id="order-history-container" style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Rendered dynamically by JS -->
                 </div>
             </div>
         </div>
@@ -2934,6 +2971,32 @@
 
         let lastPayablePaise = 0;
         let enteredPinDigits = [];
+        window.activeCheckoutSession = null;
+        window.orderHistory = [];
+
+        function loadOrderHistory() {
+            try {
+                const saved = localStorage.getItem('zepto_order_history');
+                if (saved) {
+                    window.orderHistory = JSON.parse(saved);
+                }
+            } catch (e) {}
+            if (!window.orderHistory) window.orderHistory = [];
+            updateOrderHistoryBadge();
+        }
+
+        function updateOrderHistoryBadge() {
+            const badge = document.getElementById('order-history-badge');
+            if (badge) {
+                const count = window.orderHistory ? window.orderHistory.length : 0;
+                if (count > 0) {
+                    badge.innerText = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
 
         function openCheckoutSummary() {
             closeCartDrawer();
@@ -2999,6 +3062,21 @@
             const payablePaise = itemTotalPaise + deliveryFeePaise;
             lastPayablePaise = payablePaise;
 
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            // Create Immutable Active Checkout Session Snapshot BEFORE cart clear
+            window.activeCheckoutSession = {
+                orderId: "ZP-" + Math.floor(100000 + Math.random() * 900000),
+                items: ownItems.map(i => ({ name: i.name, price_paise: i.price_paise })),
+                itemTotalPaise: itemTotalPaise,
+                deliveryFeePaise: deliveryFeePaise,
+                payablePaise: payablePaise,
+                timestamp: timeStr,
+                dateStr: dateStr
+            };
+
             const formattedOwnTotal = (itemTotalPaise / 100).toFixed(2);
             const formattedPayable = (payablePaise / 100).toFixed(2);
 
@@ -3042,7 +3120,10 @@
             if (loadingState) loadingState.style.display = 'none';
             if (keypadContainer) keypadContainer.style.display = 'grid';
             if (pinContainer) pinContainer.style.display = 'flex';
-            if (amountDisplay) amountDisplay.innerText = `₹${(lastPayablePaise / 100).toFixed(2)}`;
+            
+            const session = window.activeCheckoutSession;
+            const payableAmount = session ? session.payablePaise : lastPayablePaise;
+            if (amountDisplay) amountDisplay.innerText = `₹${(payableAmount / 100).toFixed(2)}`;
 
             upiScreen.classList.add('open');
             upiScreen.classList.add('active');
@@ -3090,6 +3171,12 @@
             if (keypadContainer) keypadContainer.style.display = 'none';
             if (pinContainer) pinContainer.style.display = 'none';
 
+            const session = window.activeCheckoutSession || {
+                orderId: "ZP-" + Math.floor(100000 + Math.random() * 900000),
+                items: [],
+                payablePaise: lastPayablePaise
+            };
+
             setTimeout(async () => {
                 // Post-Checkout Cleanup: Clear logged in user's items ONLY
                 const cart = window.lastCartData;
@@ -3114,13 +3201,41 @@
                 const userTotalEl = document.getElementById('user-cart-total');
                 if (userTotalEl) userTotalEl.innerText = "₹0.00";
 
-                // Generate Order ID & Amount
-                const orderID = "ZP-" + Math.floor(100000 + Math.random() * 900000);
+                // Save Order Snapshot to Order History
+                if (!window.orderHistory) window.orderHistory = [];
+                window.orderHistory.unshift(session);
+                try {
+                    localStorage.setItem('zepto_order_history', JSON.stringify(window.orderHistory));
+                } catch (e) {}
+                updateOrderHistoryBadge();
+
+                // Populate Order Success Details from Immutable Session
                 const orderIdEl = document.getElementById('success-order-id');
                 const amountPaidEl = document.getElementById('success-amount-paid');
+                const itemsListEl = document.getElementById('success-items-list');
 
-                if (orderIdEl) orderIdEl.innerText = orderID;
-                if (amountPaidEl) amountPaidEl.innerText = `₹${(lastPayablePaise / 100).toFixed(2)} paid via UPI`;
+                if (orderIdEl) orderIdEl.innerText = session.orderId;
+                if (amountPaidEl) amountPaidEl.innerText = `₹${(session.payablePaise / 100).toFixed(2)} paid via UPI`;
+
+                if (itemsListEl && session.items) {
+                    itemsListEl.innerHTML = '';
+                    const grouped = {};
+                    session.items.forEach(item => {
+                        if (!grouped[item.name]) grouped[item.name] = { name: item.name, price_paise: item.price_paise, count: 0 };
+                        grouped[item.name].count++;
+                    });
+                    Object.values(grouped).forEach(g => {
+                        const row = document.createElement('div');
+                        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; color: #F8FAFC;";
+                        const formattedPrice = (g.count * g.price_paise / 100).toFixed(2);
+                        const nameStr = g.count > 1 ? `${g.name} × ${g.count}` : g.name;
+                        row.innerHTML = `
+                            <span>${nameStr}</span>
+                            <span style="font-weight: 700; color: #34D399;">₹${formattedPrice}</span>
+                        `;
+                        itemsListEl.appendChild(row);
+                    });
+                }
 
                 closeUpiPinScreen();
                 closeCheckoutSummary();
@@ -3131,7 +3246,7 @@
                     successScreen.classList.add('active');
                 }
 
-                showToast(`🎉 Order ${orderID} placed successfully!`, "🎉", 4000);
+                showToast(`🎉 Order ${session.orderId} placed successfully!`, "🎉", 4000);
             }, 1500);
         }
 
@@ -3143,6 +3258,83 @@
             }
         }
 
+        function openOrderHistoryScreen() {
+            renderOrderHistory();
+            const screen = document.getElementById('order-history-screen');
+            if (screen) {
+                screen.classList.add('open');
+                screen.classList.add('active');
+            }
+        }
+
+        function closeOrderHistoryScreen() {
+            const screen = document.getElementById('order-history-screen');
+            if (screen) {
+                screen.classList.remove('open');
+                screen.classList.remove('active');
+            }
+        }
+
+        function renderOrderHistory() {
+            const container = document.getElementById('order-history-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const history = window.orderHistory || [];
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-light);">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">📜</div>
+                        <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px;">No Orders Placed Yet</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Your completed orders and receipts will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            history.forEach(order => {
+                const card = document.createElement('div');
+                card.style.cssText = "background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-subtle);";
+                
+                let itemsHTML = '';
+                const grouped = {};
+                (order.items || []).forEach(item => {
+                    if (!grouped[item.name]) grouped[item.name] = { name: item.name, price_paise: item.price_paise, count: 0 };
+                    grouped[item.name].count++;
+                });
+                Object.values(grouped).forEach(g => {
+                    const formattedPrice = (g.count * g.price_paise / 100).toFixed(2);
+                    const nameStr = g.count > 1 ? `${g.name} × ${g.count}` : g.name;
+                    itemsHTML += `
+                        <div style="display: flex; justify-content: space-between; font-size: 0.83rem; color: var(--text-dark); padding: 2px 0;">
+                            <span>${nameStr}</span>
+                            <span style="font-weight: 700;">₹${formattedPrice}</span>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-light);">
+                        <div>
+                            <div style="font-weight: 900; font-size: 0.95rem; color: var(--zepto-purple-bright); font-family: 'JetBrains Mono', monospace;">${order.orderId}</div>
+                            <div style="font-size: 0.73rem; color: var(--text-muted); font-weight: 600;">${order.dateStr || ''} • ${order.timestamp || ''}</div>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.12); color: var(--green-success); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 4px 10px; font-size: 0.72rem; font-weight: 800;">
+                            ✓ Delivered
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        ${itemsHTML}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 8px; font-size: 0.9rem; font-weight: 800; color: var(--text-dark);">
+                        <span>Total Paid</span>
+                        <span style="color: var(--green-success);">₹${(order.payablePaise / 100).toFixed(2)}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
@@ -3151,6 +3343,7 @@
             connectWS();
             fetchActiveTrip();
             fetchCatalogStock();
+            loadOrderHistory();
         };
     </script>
 </body>
