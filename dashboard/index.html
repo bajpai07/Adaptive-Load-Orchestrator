@@ -804,15 +804,38 @@
             max-width: 520px;
             height: 100vh;
             background: var(--bg-canvas);
-            z-index: 200;
+            z-index: 1500;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             overflow-y: auto;
         }
 
-        .overlay-screen.open {
+        .overlay-screen.open,
+        .overlay-screen.active {
             transform: translateX(-50%) translateY(0);
+        }
+
+        .upi-key-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #F8FAFC;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .upi-key-btn:active {
+            transform: scale(0.94);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .upi-dot.active {
+            background: #34D399 !important;
+            border-color: #34D399 !important;
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
         }
 
         .overlay-header {
@@ -1742,83 +1765,70 @@
 
                 <!-- Sticky Bottom Bar -->
                 <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 16px; background: white; border-top: 1px solid var(--border-light); box-sizing: border-box; z-index: 1200;">
-                    <button onclick="openPaymentScreen()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); display: flex; justify-content: space-between; align-items: center;">
-                        <span>Pay Now</span>
+                    <button onclick="openUpiPinScreen()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span>🟣</span> Pay via UPI
+                        </span>
                         <span id="pay-now-btn-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00 →</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 13. Fake Payment Screen Overlay -->
-        <div class="overlay-screen" id="payment-screen">
-            <div class="overlay-header">
-                <button class="back-btn" onclick="closePaymentScreen()">←</button>
+        <!-- 13. Fake UPI PIN Screen Overlay -->
+        <div class="overlay-screen" id="upi-pin-screen" style="background: linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%); color: white;">
+            <div class="overlay-header" style="background: transparent; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <button class="back-btn" onclick="closeUpiPinScreen()">←</button>
                 <div class="overlay-title">
-                    <h2>Select Payment Method</h2>
-                    <p>Fast & secure 1-click payment</p>
+                    <h2 style="color: white;">UPI Payment</h2>
+                    <p style="color: #94A3B8;">Enter 4-Digit UPI PIN</p>
                 </div>
             </div>
 
-            <div class="overlay-content" style="padding-bottom: 90px;">
-                <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
-                        💳 Payment Options
+            <div class="overlay-content" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 82vh; padding: 20px 16px; box-sizing: border-box;">
+                
+                <!-- Payee & Amount Info Header -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%;">
+                    <div style="width: 52px; height: 52px; background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(124, 58, 237, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #A7F3D0; margin-bottom: 4px;">
+                        🟣
                     </div>
+                    <div style="font-size: 0.85rem; color: #94A3B8; font-weight: 600;">Paying to Zepto Quick Commerce</div>
+                    <div style="font-size: 0.75rem; color: #CBD5E1; font-family: 'JetBrains Mono', monospace;">UPI ID: vikram@upi</div>
+                    <div id="upi-amount-display" style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; color: #34D399; margin-top: 4px;">₹0.00</div>
+                </div>
 
-                    <!-- Payment Options List -->
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <!-- Option 1: UPI -->
-                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1.5px solid var(--zepto-purple-bright); background: rgba(124, 58, 237, 0.05); border-radius: 12px; cursor: pointer;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="radio" name="payment-method-opt" value="UPI (Google Pay / PhonePe)" checked style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
-                                <div>
-                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">UPI (Google Pay / PhonePe / Paytm)</div>
-                                    <div style="font-size: 0.72rem; color: var(--green-success); font-weight: 600;">⚡ Instant Approval</div>
-                                </div>
-                            </div>
-                            <span style="font-size: 1.2rem;">🟣</span>
-                        </label>
-
-                        <!-- Option 2: Card -->
-                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border-light); border-radius: 12px; cursor: pointer;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="radio" name="payment-method-opt" value="Credit / Debit Card" style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
-                                <div>
-                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">Credit / Debit Card</div>
-                                    <div style="font-size: 0.72rem; color: var(--text-muted);">Visa, Mastercard, RuPay</div>
-                                </div>
-                            </div>
-                            <span style="font-size: 1.2rem;">💳</span>
-                        </label>
-
-                        <!-- Option 3: COD -->
-                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border-light); border-radius: 12px; cursor: pointer;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="radio" name="payment-method-opt" value="Cash on Delivery" style="accent-color: var(--zepto-purple-bright); width: 18px; height: 18px;">
-                                <div>
-                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dark);">Cash on Delivery</div>
-                                    <div style="font-size: 0.72rem; color: var(--text-muted);">Pay upon delivery</div>
-                                </div>
-                            </div>
-                            <span style="font-size: 1.2rem;">💵</span>
-                        </label>
+                <!-- PIN Dots Input Display -->
+                <div id="upi-pin-container" style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 20px 0; width: 100%;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; letter-spacing: 1px; text-transform: uppercase;">Enter 4-Digit UPI PIN</div>
+                    <div style="display: flex; gap: 16px;">
+                        <div class="upi-dot" id="pin-dot-1" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #64748B; background: transparent; transition: all 0.2s ease;"></div>
+                        <div class="upi-dot" id="pin-dot-2" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #64748B; background: transparent; transition: all 0.2s ease;"></div>
+                        <div class="upi-dot" id="pin-dot-3" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #64748B; background: transparent; transition: all 0.2s ease;"></div>
+                        <div class="upi-dot" id="pin-dot-4" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #64748B; background: transparent; transition: all 0.2s ease;"></div>
                     </div>
                 </div>
 
-                <!-- Simulated Loading State (Hidden by default) -->
-                <div id="payment-loading-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px; text-align: center;">
-                    <div style="width: 48px; height: 48px; border: 4px solid rgba(124, 58, 237, 0.2); border-top-color: var(--zepto-purple-bright); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;"></div>
-                    <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-dark);">Processing Payment...</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Securing your order with dark store fulfillment</p>
+                <!-- Processing Loading State (Hidden by default) -->
+                <div id="upi-loading-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 20px 0;">
+                    <div style="width: 48px; height: 48px; border: 4px solid rgba(52, 211, 153, 0.2); border-top-color: #34D399; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: #F8FAFC;">Verifying UPI PIN...</div>
+                    <div style="font-size: 0.75rem; color: #94A3B8;">Communicating securely with bank server</div>
                 </div>
 
-                <!-- Sticky Bottom Bar -->
-                <div id="payment-action-container" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 16px; background: white; border-top: 1px solid var(--border-light); box-sizing: border-box; z-index: 1200;">
-                    <button onclick="processFakePayment()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; justify-content: space-between; align-items: center;">
-                        <span>Confirm & Pay</span>
-                        <span id="confirm-pay-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00</span>
-                    </button>
+                <!-- Simulated Keypad -->
+                <div id="upi-keypad-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 320px; margin-top: auto;">
+                    <button onclick="pressUpiKey('1')" class="upi-key-btn">1</button>
+                    <button onclick="pressUpiKey('2')" class="upi-key-btn">2</button>
+                    <button onclick="pressUpiKey('3')" class="upi-key-btn">3</button>
+                    <button onclick="pressUpiKey('4')" class="upi-key-btn">4</button>
+                    <button onclick="pressUpiKey('5')" class="upi-key-btn">5</button>
+                    <button onclick="pressUpiKey('6')" class="upi-key-btn">6</button>
+                    <button onclick="pressUpiKey('7')" class="upi-key-btn">7</button>
+                    <button onclick="pressUpiKey('8')" class="upi-key-btn">8</button>
+                    <button onclick="pressUpiKey('9')" class="upi-key-btn">9</button>
+                    <button onclick="pressUpiKey('clear')" class="upi-key-btn" style="background: rgba(239, 68, 68, 0.15); color: #F87171;">⌫</button>
+                    <button onclick="pressUpiKey('0')" class="upi-key-btn">0</button>
+                    <button onclick="confirmUpiPin()" class="upi-key-btn" style="background: linear-gradient(135deg, #10B981, #059669); color: white; font-weight: 900;">✓</button>
                 </div>
             </div>
         </div>
@@ -2923,6 +2933,7 @@
         }
 
         let lastPayablePaise = 0;
+        let enteredPinDigits = [];
 
         function openCheckoutSummary() {
             closeCartDrawer();
@@ -2936,22 +2947,27 @@
             if (!summaryScreen || !itemsListEl) return;
 
             const cart = window.lastCartData || { items: [] };
-            const items = cart.items || [];
+            const allItems = cart.items || [];
+            
+            // Filter to ONLY the current user's own items
+            const ownItems = allItems.filter(i => 
+                !i.added_by_member_id || 
+                i.added_by_member_id === memberID || 
+                i.added_by_member_id === "mem-web-304" || 
+                i.added_by_member_id === "mem-creator"
+            );
 
-            // Populate Item breakdown
             itemsListEl.innerHTML = '';
             let itemTotalPaise = 0;
 
             const groupedItems = {};
-            items.forEach(item => {
+            ownItems.forEach(item => {
                 itemTotalPaise += item.price_paise;
-                const adderID = item.added_by_member_id || memberID;
-                const key = `${item.name}___${adderID}`;
+                const key = item.name;
                 if (!groupedItems[key]) {
                     groupedItems[key] = {
                         name: item.name,
                         price_paise: item.price_paise,
-                        adderID: adderID,
                         count: 0
                     };
                 }
@@ -2960,15 +2976,19 @@
 
             Object.values(groupedItems).forEach(group => {
                 const row = document.createElement('div');
-                row.style.cssText = "display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; color: var(--text-dark);";
+                row.style.cssText = "display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; color: var(--text-dark); padding: 4px 0;";
                 const totalRowPrice = (group.count * group.price_paise / 100).toFixed(2);
                 const displayName = group.count > 1 ? `${group.name} × ${group.count}` : group.name;
                 row.innerHTML = `
-                    <span>${displayName}</span>
-                    <span style="font-weight: 700;">₹${totalRowPrice}</span>
+                    <span style="font-weight: 600;">${displayName}</span>
+                    <span style="font-weight: 800; color: var(--zepto-purple-bright);">₹${totalRowPrice}</span>
                 `;
                 itemsListEl.appendChild(row);
             });
+
+            if (ownItems.length === 0) {
+                itemsListEl.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 10px;">No personal items in cart</div>';
+            }
 
             // Delivery Fee calculation (Respecting ₹0 fee logic)
             let deliveryFeePaise = 0;
@@ -2979,7 +2999,10 @@
             const payablePaise = itemTotalPaise + deliveryFeePaise;
             lastPayablePaise = payablePaise;
 
-            if (itemTotalEl) itemTotalEl.innerText = `₹${(itemTotalPaise / 100).toFixed(2)}`;
+            const formattedOwnTotal = (itemTotalPaise / 100).toFixed(2);
+            const formattedPayable = (payablePaise / 100).toFixed(2);
+
+            if (itemTotalEl) itemTotalEl.innerText = `₹${formattedOwnTotal}`;
             if (deliveryFeeEl) {
                 if (deliveryFeePaise === 0) {
                     deliveryFeeEl.innerText = 'FREE (₹0.00)';
@@ -2989,47 +3012,83 @@
                     deliveryFeeEl.style.color = 'var(--text-dark)';
                 }
             }
-            if (payableTotalEl) payableTotalEl.innerText = `₹${(payablePaise / 100).toFixed(2)}`;
-            if (payNowBadgeEl) payNowBadgeEl.innerText = `₹${(payablePaise / 100).toFixed(2)} →`;
+            if (payableTotalEl) payableTotalEl.innerText = `₹${formattedPayable}`;
+            if (payNowBadgeEl) payNowBadgeEl.innerText = `₹${formattedPayable} →`;
 
+            summaryScreen.classList.add('open');
             summaryScreen.classList.add('active');
         }
 
         function closeCheckoutSummary() {
             const summaryScreen = document.getElementById('checkout-summary-screen');
-            if (summaryScreen) summaryScreen.classList.remove('active');
+            if (summaryScreen) {
+                summaryScreen.classList.remove('open');
+                summaryScreen.classList.remove('active');
+            }
         }
 
-        function openPaymentScreen() {
-            const paymentScreen = document.getElementById('payment-screen');
-            const confirmPayBadge = document.getElementById('confirm-pay-badge');
-            const loadingState = document.getElementById('payment-loading-state');
-            const actionContainer = document.getElementById('payment-action-container');
+        function openUpiPinScreen() {
+            const upiScreen = document.getElementById('upi-pin-screen');
+            const amountDisplay = document.getElementById('upi-amount-display');
+            const loadingState = document.getElementById('upi-loading-state');
+            const keypadContainer = document.getElementById('upi-keypad-container');
+            const pinContainer = document.getElementById('upi-pin-container');
 
-            if (!paymentScreen) return;
+            if (!upiScreen) return;
+
+            enteredPinDigits = [];
+            updatePinDotsDisplay();
 
             if (loadingState) loadingState.style.display = 'none';
-            if (actionContainer) actionContainer.style.display = 'block';
-            if (confirmPayBadge) confirmPayBadge.innerText = `₹${(lastPayablePaise / 100).toFixed(2)}`;
+            if (keypadContainer) keypadContainer.style.display = 'grid';
+            if (pinContainer) pinContainer.style.display = 'flex';
+            if (amountDisplay) amountDisplay.innerText = `₹${(lastPayablePaise / 100).toFixed(2)}`;
 
-            paymentScreen.classList.add('active');
+            upiScreen.classList.add('open');
+            upiScreen.classList.add('active');
         }
 
-        function closePaymentScreen() {
-            const paymentScreen = document.getElementById('payment-screen');
-            if (paymentScreen) paymentScreen.classList.remove('active');
+        function closeUpiPinScreen() {
+            const upiScreen = document.getElementById('upi-pin-screen');
+            if (upiScreen) {
+                upiScreen.classList.remove('open');
+                upiScreen.classList.remove('active');
+            }
         }
 
-        async function processFakePayment() {
-            const loadingState = document.getElementById('payment-loading-state');
-            const actionContainer = document.getElementById('payment-action-container');
+        function pressUpiKey(key) {
+            if (key === 'clear') {
+                enteredPinDigits.pop();
+            } else if (enteredPinDigits.length < 4) {
+                enteredPinDigits.push(key);
+            }
+            updatePinDotsDisplay();
+            if (enteredPinDigits.length === 4) {
+                setTimeout(confirmUpiPin, 250);
+            }
+        }
+
+        function updatePinDotsDisplay() {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`pin-dot-${i}`);
+                if (dot) {
+                    if (i <= enteredPinDigits.length) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        async function confirmUpiPin() {
+            const loadingState = document.getElementById('upi-loading-state');
+            const keypadContainer = document.getElementById('upi-keypad-container');
+            const pinContainer = document.getElementById('upi-pin-container');
 
             if (loadingState) loadingState.style.display = 'flex';
-            if (actionContainer) actionContainer.style.display = 'none';
-
-            // Get selected payment method
-            const selectedOpt = document.querySelector('input[name="payment-method-opt"]:checked');
-            const methodLabel = selectedOpt ? selectedOpt.value : "UPI";
+            if (keypadContainer) keypadContainer.style.display = 'none';
+            if (pinContainer) pinContainer.style.display = 'none';
 
             setTimeout(async () => {
                 // Post-Checkout Cleanup: Clear logged in user's items ONLY
@@ -3061,24 +3120,27 @@
                 const amountPaidEl = document.getElementById('success-amount-paid');
 
                 if (orderIdEl) orderIdEl.innerText = orderID;
-                if (amountPaidEl) amountPaidEl.innerText = `₹${(lastPayablePaise / 100).toFixed(2)} (${methodLabel})`;
+                if (amountPaidEl) amountPaidEl.innerText = `₹${(lastPayablePaise / 100).toFixed(2)} paid via UPI`;
 
-                closePaymentScreen();
+                closeUpiPinScreen();
                 closeCheckoutSummary();
 
                 const successScreen = document.getElementById('order-success-screen');
-                if (successScreen) successScreen.classList.add('active');
-
-                if (loadingState) loadingState.style.display = 'none';
-                if (actionContainer) actionContainer.style.display = 'block';
+                if (successScreen) {
+                    successScreen.classList.add('open');
+                    successScreen.classList.add('active');
+                }
 
                 showToast(`🎉 Order ${orderID} placed successfully!`, "🎉", 4000);
-            }, 1800);
+            }, 1500);
         }
 
         function closeOrderSuccess() {
             const successScreen = document.getElementById('order-success-screen');
-            if (successScreen) successScreen.classList.remove('active');
+            if (successScreen) {
+                successScreen.classList.remove('open');
+                successScreen.classList.remove('active');
+            }
         }
 
         function escapeHtml(str) {
