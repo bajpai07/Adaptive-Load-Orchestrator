@@ -838,6 +838,11 @@
             box-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
         }
 
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .overlay-header {
             background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 60%, var(--zepto-purple-bright) 100%);
             color: #FFFFFF;
@@ -1814,10 +1819,10 @@
                 </div>
 
                 <!-- Processing Loading State (Hidden by default) -->
-                <div id="upi-loading-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 20px 0;">
-                    <div style="width: 48px; height: 48px; border: 4px solid rgba(52, 211, 153, 0.2); border-top-color: #34D399; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                    <div style="font-size: 0.95rem; font-weight: 800; color: #F8FAFC;">Verifying UPI PIN...</div>
-                    <div style="font-size: 0.75rem; color: #94A3B8;">Communicating securely with bank server</div>
+                <div id="upi-loading-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; margin: 30px 0;">
+                    <div style="width: 52px; height: 52px; border: 4px solid rgba(124, 58, 237, 0.25); border-top-color: var(--zepto-purple-bright); border-right-color: #34D399; border-radius: 50%; animation: spin 0.85s linear infinite; box-shadow: 0 0 18px rgba(124, 58, 237, 0.5);"></div>
+                    <div style="font-size: 1rem; font-weight: 800; color: #F8FAFC; font-family: 'Outfit', sans-serif;">Processing Payment...</div>
+                    <div id="upi-loading-subtext" style="font-size: 0.78rem; color: #94A3B8; font-weight: 600; text-align: center;">Verifying 4-digit UPI PIN...</div>
                 </div>
 
                 <!-- Simulated Keypad -->
@@ -3189,10 +3194,16 @@
             const loadingState = document.getElementById('upi-loading-state');
             const keypadContainer = document.getElementById('upi-keypad-container');
             const pinContainer = document.getElementById('upi-pin-container');
+            const loadingSubtext = document.getElementById('upi-loading-subtext');
 
             if (loadingState) loadingState.style.display = 'flex';
             if (keypadContainer) keypadContainer.style.display = 'none';
             if (pinContainer) pinContainer.style.display = 'none';
+            if (loadingSubtext) loadingSubtext.innerText = "Verifying 4-digit UPI PIN...";
+
+            setTimeout(() => {
+                if (loadingSubtext) loadingSubtext.innerText = "Securing dark-store fulfillment & dispatching order...";
+            }, 750);
 
             const session = window.activeCheckoutSession || {
                 orderId: "ZP-" + Math.floor(100000 + Math.random() * 900000),
