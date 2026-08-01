@@ -2281,13 +2281,16 @@
             const checkoutBtn = document.getElementById('proceed-to-checkout-btn');
             const checkoutBadge = document.getElementById('checkout-payable-badge');
             if (checkoutBtn) {
-                if (items.length > 0) {
+                if (userSubtotalPaise > 0) {
                     checkoutBtn.style.display = 'flex';
                     if (checkoutBadge) {
-                        checkoutBadge.innerText = `₹${groupFormatted} →`;
+                        checkoutBadge.innerText = `₹${userFormatted} →`;
                     }
                 } else {
                     checkoutBtn.style.display = 'none';
+                    if (checkoutBadge) {
+                        checkoutBadge.innerText = `₹0.00 →`;
+                    }
                 }
             }
 
