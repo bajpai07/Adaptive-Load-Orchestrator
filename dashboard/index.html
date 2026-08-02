@@ -802,12 +802,13 @@
             width: 100%;
             max-width: 520px;
             height: 100vh;
+            height: 100dvh;
             background: var(--bg-canvas);
             z-index: 1500;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .overlay-screen.open,
@@ -843,14 +844,13 @@
         }
 
         .overlay-header {
+            flex-shrink: 0;
             background: linear-gradient(135deg, var(--zepto-purple-dark) 0%, var(--zepto-purple-main) 60%, var(--zepto-purple-bright) 100%);
             color: #FFFFFF;
             padding: 16px;
             display: flex;
             align-items: center;
             gap: 12px;
-            position: sticky;
-            top: 0;
             z-index: 10;
         }
 
@@ -882,11 +882,15 @@
         }
 
         .overlay-content {
+            flex: 1;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
-            padding-bottom: 100px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            padding-bottom: 24px;
         }
 
         /* Screen B Rider Card */
@@ -1329,6 +1333,7 @@
             width: 100%;
             max-width: 520px;
             height: 100vh;
+            height: 100dvh;
             background: rgba(0,0,0,0.5);
             z-index: 180;
             display: flex;
@@ -1337,6 +1342,7 @@
             transition: opacity 0.3s ease;
             opacity: 0;
             pointer-events: none;
+            overflow: hidden;
         }
 
         .cart-drawer-overlay.open {
@@ -1348,20 +1354,44 @@
         .cart-drawer-content {
             background: #FFFFFF;
             border-radius: 24px 24px 0 0;
-            padding: 20px;
-            max-height: 80vh;
-            overflow-y: auto;
+            padding: 0;
+            height: 85dvh;
+            max-height: 85vh;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            overflow: hidden;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
         }
 
         .cart-drawer-header {
+            flex-shrink: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-light);
-            padding-bottom: 12px;
+            padding: 16px 20px;
+            background: #FFFFFF;
+        }
+
+        .cart-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .cart-drawer-footer {
+            flex-shrink: 0;
+            padding: 14px 20px;
+            background: #FFFFFF;
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            will-change: transform;
         }
 
         .cart-drawer-title {
@@ -1975,53 +2005,59 @@
                     <button class="close-drawer-btn" onclick="toggleCartDrawer()">✕</button>
                 </div>
 
-                <!-- Items List -->
-                <ul class="item-list-container" id="item-list">
-                    <!-- Dynamic items rendered by JS -->
-                </ul>
+                <!-- Scrollable Body Area -->
+                <div class="cart-drawer-body">
+                    <!-- Items List -->
+                    <ul class="item-list-container" id="item-list">
+                        <!-- Dynamic items rendered by JS -->
+                    </ul>
 
-                <!-- Dual Totals Summary Card (Your Value + Total Group Cart Value) -->
-                <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(99, 102, 241, 0.06)); border: 1.5px solid rgba(124, 58, 237, 0.18); border-radius: 14px; padding: 12px 14px; margin: 10px 0; display: flex; flex-direction: column; gap: 8px;">
-                    <!-- 1. Your Personal Value -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: var(--text-dark);">
-                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
-                            <span>👤</span> Your Cart Value (Your Items):
-                        </span>
-                        <span id="user-cart-total" style="color: var(--zepto-purple-bright); font-weight: 800; font-size: 0.95rem;">₹0.00</span>
+                    <!-- Dual Totals Summary Card (Your Value + Total Group Cart Value) -->
+                    <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(99, 102, 241, 0.06)); border: 1.5px solid rgba(124, 58, 237, 0.18); border-radius: 14px; padding: 12px 14px; margin: 10px 0; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- 1. Your Personal Value -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: var(--text-dark);">
+                            <span style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+                                <span>👤</span> Your Cart Value (Your Items):
+                            </span>
+                            <span id="user-cart-total" style="color: var(--zepto-purple-bright); font-weight: 800; font-size: 0.95rem;">₹0.00</span>
+                        </div>
+
+                        <div style="height: 1px; background: var(--border-light); width: 100%;"></div>
+
+                        <!-- 2. Combined Group Total -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.96rem; color: var(--text-dark);">
+                            <span style="display: flex; align-items: center; gap: 6px; font-weight: 800;">
+                                <span>🛒</span> Total Group Cart Value:
+                            </span>
+                            <span id="cart-total" style="color: var(--green-success); font-weight: 900; font-size: 1.05rem;">₹0.00</span>
+                        </div>
                     </div>
 
-                    <div style="height: 1px; background: var(--border-light); width: 100%;"></div>
-
-                    <!-- 2. Combined Group Total -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.96rem; color: var(--text-dark);">
-                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 800;">
-                            <span>🛒</span> Total Group Cart Value:
-                        </span>
-                        <span id="cart-total" style="color: var(--green-success); font-weight: 900; font-size: 1.05rem;">₹0.00</span>
+                    <!-- Per-Member Subtotal Breakdown Section -->
+                    <div style="background: var(--bg-canvas); border-radius: 14px; padding: 12px; border: 1px solid var(--border-light); margin-bottom: 6px;">
+                        <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            📊 Per-Member Subtotal Breakdown
+                        </div>
+                        <div id="per-member-breakdown" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Dynamic member subtotals rendered by JS -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- Per-Member Subtotal Breakdown Section -->
-                <div style="background: var(--bg-canvas); border-radius: 14px; padding: 12px; border: 1px solid var(--border-light); margin-bottom: 6px;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        📊 Per-Member Subtotal Breakdown
-                    </div>
-                    <div id="per-member-breakdown" style="display: flex; flex-direction: column; gap: 6px;">
-                        <!-- Dynamic member subtotals rendered by JS -->
-                    </div>
+                <!-- Fixed Sticky Footer Container -->
+                <div class="cart-drawer-footer">
+                    <button class="proceed-checkout-btn" id="proceed-to-checkout-btn" onclick="openCheckoutSummary()" style="display: none; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.98rem; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); margin-bottom: 8px; transition: transform 0.15s ease;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span>🛍️</span> Proceed to Checkout
+                        </span>
+                        <span id="checkout-payable-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: 800;">₹0.00 →</span>
+                    </button>
+
+                    <button class="add-item-action-btn" id="cart-drawer-action-btn" onclick="closeCartDrawer()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform 0.15s ease;">
+                        <span>Add More Items from Store</span>
+                        <span id="footer-cart-total-badge" style="background: rgba(255, 255, 255, 0.22); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;">Total: ₹0.00</span>
+                    </button>
                 </div>
-
-                <button class="proceed-checkout-btn" id="proceed-to-checkout-btn" onclick="openCheckoutSummary()" style="display: none; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.98rem; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); margin-bottom: 8px; transition: all 0.2s ease;">
-                    <span style="display: flex; align-items: center; gap: 8px;">
-                        <span>🛍️</span> Proceed to Checkout
-                    </span>
-                    <span id="checkout-payable-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: 800;">₹0.00 →</span>
-                </button>
-
-                <button class="add-item-action-btn" id="cart-drawer-action-btn" onclick="closeCartDrawer()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 18px; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, var(--zepto-purple-bright), #6366F1); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: all 0.2s ease;">
-                    <span>Add More Items from Store</span>
-                    <span id="footer-cart-total-badge" style="background: rgba(255, 255, 255, 0.22); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;">Total: ₹0.00</span>
-                </button>
             </div>
         </div>
 
@@ -2035,7 +2071,8 @@
                 </div>
             </div>
 
-            <div class="overlay-content" style="padding-bottom: 90px;">
+            <!-- Scrollable Body Area -->
+            <div class="overlay-content">
                 <!-- Address Confirmation Card -->
                 <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -2083,16 +2120,16 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Sticky Bottom Bar -->
-                <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 16px; background: white; border-top: 1px solid var(--border-light); box-sizing: border-box; z-index: 1200;">
-                    <button onclick="openUpiPinScreen()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; justify-content: space-between; align-items: center;">
-                        <span style="display: flex; align-items: center; gap: 8px;">
-                            <span>🟣</span> Pay via UPI
-                        </span>
-                        <span id="pay-now-btn-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00 →</span>
-                    </button>
-                </div>
+            <!-- Fixed Sticky Footer Container for Checkout -->
+            <div class="checkout-sticky-cta">
+                <button onclick="openUpiPinScreen()" style="width: 100%; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; justify-content: space-between; align-items: center; transition: transform 0.15s ease;">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <span>🟣</span> Pay via UPI
+                    </span>
+                    <span id="pay-now-btn-badge" style="background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">₹0.00 →</span>
+                </button>
             </div>
         </div>
 
