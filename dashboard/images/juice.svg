@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#FFEDD5"/>
+  <!-- Tetra Pak Juice Carton -->
+  <rect x="55" y="42" width="90" height="120" rx="8" fill="#EA580C" stroke="#C2410C" stroke-width="2"/>
+  <!-- Top Cap -->
+  <rect x="88" y="32" width="24" height="10" rx="3" fill="#16A34A"/>
+  <!-- Real Logo Green Leaf Banner -->
+  <path d="M 55 58 Q 100 70 145 58 L 145 92 L 55 92 Z" fill="#15803D"/>
+  <text x="100" y="78" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#FFFFFF" text-anchor="middle" font-style="italic">Réal</text>
+  <text x="100" y="88" font-family="Arial, sans-serif" font-weight="700" font-size="7" fill="#FEF08A" text-anchor="middle">FRUIT POWER</text>
+  <!-- Orange Fruit Cut Graphic -->
+  <circle cx="100" cy="122" r="22" fill="#F97316" stroke="#FFFFFF" stroke-width="2"/>
+  <circle cx="100" cy="122" r="16" fill="#FDBA74"/>
+  <path d="M 100 100 L 100 144 M 78 122 L 122 122 M 84 106 L 116 138 M 84 138 L 116 106" stroke="#EA580C" stroke-width="1.5"/>
+  <!-- 100% Orange Juice Badge -->
+  <rect x="65" y="148" width="70" height="10" rx="2" fill="#FFFFFF"/>
+  <text x="100" y="156" font-family="Arial, sans-serif" font-weight="900" font-size="7" fill="#C2410C" text-anchor="middle">100% ORANGE JUICE</text>
+</svg>

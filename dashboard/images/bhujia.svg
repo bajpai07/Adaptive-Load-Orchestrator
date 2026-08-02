@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#FEF3C7"/>
+  <!-- Pouch Base -->
+  <rect x="42" y="42" width="116" height="116" rx="12" fill="#D97706" stroke="#B45309" stroke-width="2"/>
+  <rect x="50" y="50" width="100" height="100" rx="8" fill="#F59E0B"/>
+  <!-- Haldiram Red Oval Banner -->
+  <ellipse cx="100" cy="72" rx="42" ry="16" fill="#DC2626"/>
+  <text x="100" y="77" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#FFFFFF" text-anchor="middle">Haldiram's</text>
+  <!-- BHUJIA SEV Title -->
+  <text x="100" y="105" font-family="Arial, sans-serif" font-weight="900" font-size="13" fill="#78350F" text-anchor="middle">BHUJIA SEV</text>
+  <!-- Crispy Bhujia texture -->
+  <path d="M 60 120 Q 70 115 80 122 Q 90 118 100 124 Q 110 116 120 122 Q 130 118 140 122" stroke="#FDE047" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M 65 128 Q 75 124 85 130 Q 95 125 105 132 Q 115 126 125 130 Q 135 125 140 129" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Weight badge -->
+  <rect x="75" y="136" width="50" height="12" rx="3" fill="#92400E"/>
+  <text x="100" y="145" font-family="Arial, sans-serif" font-weight="800" font-size="8" fill="#FFFFFF" text-anchor="middle">150g NET</text>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#FEFCE8"/>
+  <!-- Amul Butter Box (Yellow Packaging) -->
+  <rect x="40" y="55" width="120" height="90" rx="8" fill="#FACC15" stroke="#EAB308" stroke-width="2"/>
+  <!-- Blue Trim Header -->
+  <path d="M 40 55 L 160 55 L 160 82 L 40 82 Z" fill="#1D4ED8"/>
+  <!-- Amul Logo -->
+  <text x="100" y="75" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">Amul</text>
+  <!-- BUTTER Text -->
+  <text x="100" y="104" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#DC2626" text-anchor="middle">BUTTER</text>
+  <text x="100" y="118" font-family="Arial, sans-serif" font-weight="700" font-size="9" fill="#1E293B" text-anchor="middle">PASTEURISED SALTED</text>
+  <!-- Butter Slab Graphic -->
+  <rect x="65" y="124" width="70" height="14" rx="3" fill="#FDE047" stroke="#CA8A04" stroke-width="1"/>
+  <!-- Weight Badge -->
+  <rect x="125" y="128" width="30" height="12" rx="3" fill="#DC2626"/>
+  <text x="140" y="137" font-family="Arial, sans-serif" font-weight="800" font-size="8" fill="#FFFFFF" text-anchor="middle">100g</text>
+</svg>
