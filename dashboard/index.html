@@ -2849,25 +2849,7 @@
 
                     const nameLabel = isSelf ? `${m.display_name || "Vikram Kumar"} <span class="you-pill-badge">(You)</span>` : (m.display_name || "Member");
 
-                    // Paid Order Detection for Trip List (Issue 1)
-                    let isPaidOrder = false;
-                    let paidAmountPaise = 0;
-                    if (isSelf && window.orderHistory && window.orderHistory.length > 0 && orderPaise === 0) {
-                        const latestOrder = window.orderHistory[0];
-                        if (latestOrder) {
-                            isPaidOrder = true;
-                            paidAmountPaise = latestOrder.payablePaise || latestOrder.itemTotalPaise;
-                            if (latestOrder.items && latestOrder.items.length > 0) {
-                                itemSummaryText = formatItemsSummary(latestOrder.items.map(i => i.name));
-                            }
-                        }
-                    }
-
                     let priceDisplayHTML = `<div class="member-price">₹${(orderPaise / 100).toFixed(2)}</div>`;
-                    if (isPaidOrder) {
-                        const paidFormatted = (paidAmountPaise / 100).toFixed(2);
-                        priceDisplayHTML = `<div class="member-price" style="color: var(--green-success); font-weight: 800; font-size: 0.82rem;">₹${paidFormatted} — Paid ✓</div>`;
-                    }
 
                     return `
                         <li class="member-row">
