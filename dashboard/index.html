@@ -2633,8 +2633,9 @@
         function initRiderTimelineLoop() {
             function tickMonotonicCountdown() {
                 // Ensure remainingSeconds ONLY decreases (monotonic)
+                // Decreases by 12s per 1s tick (full 840s / 14min journey completes in ~70 real seconds)
                 if (remainingSeconds > 0) {
-                    remainingSeconds -= 2; // Decreases by 2s per tick (simulated smooth time speedup)
+                    remainingSeconds -= 12;
                     if (remainingSeconds < 0) remainingSeconds = 0;
                 }
 
@@ -2717,10 +2718,10 @@
             // Initial render
             tickMonotonicCountdown();
 
-            // Run monotonic countdown tick every 1.5s
+            // Run compressed monotonic countdown tick every 1000ms (1 real second)
             setInterval(() => {
                 tickMonotonicCountdown();
-            }, 1500);
+            }, 1000);
         }
         initRiderTimelineLoop();
 
@@ -2783,7 +2784,7 @@
             document.getElementById('card-rider-name').innerText = riderName;
             document.getElementById('detail-geofence-name').innerText = geofenceName;
             document.getElementById('detail-assigned-count').innerText = assignedCount;
-            document.getElementById('detail-eta-number').innerText = etaMin;
+            // detail-eta-number is driven monotonically by tickMonotonicCountdown()
             document.getElementById('detail-member-badge').innerText = `${currentMemberCount} Members`;
 
             animateSavings(userDiscountPaise);
