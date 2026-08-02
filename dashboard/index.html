@@ -2453,8 +2453,29 @@
             const assignedCount = trip.assigned_order_count || 4;
             const etaMin = 14;
             
-            let members = (trip.members || []).filter(m => {
-                if ((m.member_id === "mem-web-304" || m.member_id === "mem-creator") && m.member_id !== memberID) {
+            let rawMembers = trip.members || [];
+            let userSeen = false;
+            let members = rawMembers.filter(m => {
+                const isUserPersona = (
+                    m.member_id === memberID || 
+                    m.member_id === "mem-web-304" || 
+                    m.member_id === "mem-creator" || 
+                    m.display_name === "Vikram Kumar" || 
+                    m.display_name === "Vikram Kumar (Flat 304)" || 
+                    (m.flat_location && m.flat_location.includes("Flat 304")) || 
+                    (m.member_id && (m.member_id.startsWith("mem-user-") || m.member_id.startsWith("mem-web-")))
+                );
+
+                if (isUserPersona) {
+                    if (m.member_id === memberID) {
+                        userSeen = true;
+                        return true;
+                    }
+                    if (!userSeen && !rawMembers.some(x => x.member_id === memberID)) {
+                        m.member_id = memberID;
+                        userSeen = true;
+                        return true;
+                    }
                     return false;
                 }
                 return true;

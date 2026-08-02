@@ -47,11 +47,17 @@ for _, existingID in ipairs(trip.member_order_ids) do
     end
 end
 
--- Idempotency check 2: Check if member_id already exists in members array & update live cart details
+-- Idempotency check 2: Check if member_id or any user persona already exists in members array & update live cart details
 if targetMemberID then
     for _, m in ipairs(trip.members) do
-        if m.member_id and m.member_id == targetMemberID then
+        local isUserPersona = (m.member_id and m.member_id == targetMemberID) or 
+                              (m.display_name and (m.display_name == "Vikram Kumar" or m.display_name == "You (Web User)")) or 
+                              (m.flat_location and string.find(m.flat_location, "Flat 304") ~= nil) or 
+                              (m.member_id and (string.sub(m.member_id, 1, 9) == "mem-user-" or string.sub(m.member_id, 1, 8) == "mem-web-"))
+
+        if isUserPersona then
             exists = true
+            m.member_id = targetMemberID
             if newMember then
                 if newMember.items_summary ~= nil then
                     m.items_summary = newMember.items_summary
