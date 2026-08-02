@@ -938,6 +938,109 @@
             text-align: right;
         }
 
+        @keyframes scooterDrive {
+            0% { transform: translateX(0px) rotate(0deg); }
+            25% { transform: translateX(3px) rotate(-4deg); }
+            50% { transform: translateX(0px) rotate(0deg); }
+            75% { transform: translateX(-2px) rotate(3deg); }
+            100% { transform: translateX(0px) rotate(0deg); }
+        }
+
+        @keyframes radarPulse {
+            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
+            70% { box-shadow: 0 0 0 14px rgba(249, 115, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+
+        @keyframes statusPulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .rider-avatar-large {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--orange-avatar);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            animation: radarPulse 2s infinite;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .scooter-icon-animated {
+            display: inline-block;
+            animation: scooterDrive 1.5s ease-in-out infinite;
+        }
+
+        .live-driving-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #047857;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 99px;
+            margin-top: 4px;
+        }
+
+        .live-dot-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: statusPulse 1.2s infinite ease-in-out;
+        }
+
+        .rider-route-track-container {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-light);
+            width: 100%;
+        }
+
+        .route-track-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .route-track-bar {
+            height: 6px;
+            background: #EFE9F4;
+            border-radius: 99px;
+            position: relative;
+            margin: 0 4px;
+        }
+
+        .route-track-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--zepto-purple-bright), var(--green-success));
+            border-radius: 99px;
+            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .route-scooter-marker {
+            position: absolute;
+            top: -11px;
+            transform: translateX(-50%);
+            font-size: 1.15rem;
+            transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+            animation: scooterDrive 1.2s ease-in-out infinite;
+        }
+
         .eta-num {
             font-size: 1.6rem;
             font-weight: 900;
@@ -1609,17 +1712,38 @@
 
             <div class="overlay-content">
                 <!-- Rider Detail Card -->
-                <div class="rider-detail-card">
-                    <div class="rider-detail-left">
-                        <div class="rider-avatar-large">🛵</div>
-                        <div class="rider-detail-info">
-                            <h4 id="card-rider-name">Rahul Sharma</h4>
-                            <p>Already carrying <span id="detail-assigned-count">4</span> orders</p>
+                <div class="rider-detail-card" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="rider-detail-left">
+                            <div class="rider-avatar-large">
+                                <span class="scooter-icon-animated">🛵</span>
+                            </div>
+                            <div class="rider-detail-info">
+                                <h4 id="card-rider-name">Rahul Sharma</h4>
+                                <p>Already carrying <span id="detail-assigned-count">4</span> orders</p>
+                                <div class="live-driving-badge">
+                                    <span class="live-dot-pulse"></span>
+                                    <span>LIVE • EN ROUTE TO TOWER B</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rider-eta-block">
+                            <div class="eta-num" id="detail-eta-number">7</div>
+                            <div class="eta-lbl">MINS AWAY</div>
                         </div>
                     </div>
-                    <div class="rider-eta-block">
-                        <div class="eta-num" id="detail-eta-number">6</div>
-                        <div class="eta-lbl">MINS AWAY</div>
+
+                    <!-- Live Route Track Bar -->
+                    <div class="rider-route-track-container">
+                        <div class="route-track-labels">
+                            <span>Dark Store 1</span>
+                            <span id="route-current-location" style="color: var(--zepto-purple-bright); font-weight: 800;">Golf Course Road Flyover</span>
+                            <span>Tower B 📍</span>
+                        </div>
+                        <div class="route-track-bar">
+                            <div class="route-track-fill" id="route-track-fill" style="width: 65%;"></div>
+                            <div class="route-scooter-marker" id="route-scooter-marker" style="left: 65%;">🛵</div>
+                        </div>
                     </div>
                 </div>
 
@@ -2419,29 +2543,49 @@
             }, stepTime);
         }
 
-        // Rider Timeline Micro-Events Simulation Loop (ITEM 5)
+        // Rider Timeline Micro-Events Simulation Loop with Dynamic Route Track Animation
         const riderMicroEvents = [
-            { eta: 14, text: "Order picked up & packed at Dark Store 1" },
-            { eta: 11, text: "Rider Rahul Sharma en route via Sector 42 Expressway" },
-            { eta: 7, text: "Rider crossing Golf Course Road Flyover" },
-            { eta: 3, text: "Rider entering Aravali Heights Main Gate" },
-            { eta: 1, text: "Rider arrived at Tower B Lift Lobby ⚡" }
+            { eta: 14, progress: 15, location: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
+            { eta: 11, progress: 40, location: "Sector 42 Expressway", text: "Rahul Sharma en route via Sector 42 Expressway ⚡" },
+            { eta: 7, progress: 65, location: "Golf Course Road Flyover", text: "Rahul Sharma crossing Golf Course Road Flyover 🛵" },
+            { eta: 3, progress: 88, location: "Aravali Heights Gate", text: "Rahul Sharma entering Aravali Heights Main Gate" },
+            { eta: 1, progress: 98, location: "Tower B Lift Lobby", text: "Rahul Sharma arrived at Tower B Lift Lobby ⚡" }
         ];
-        let microEventIndex = 0;
+        let microEventIndex = 2; // Start at Golf Course Road Flyover (7 min)
 
         function initRiderTimelineLoop() {
-            setInterval(() => {
-                microEventIndex = (microEventIndex + 1) % riderMicroEvents.length;
+            function updateRiderProgress() {
                 const ev = riderMicroEvents[microEventIndex];
                 
                 const timelineTextEl = document.getElementById('rider-micro-event-text');
                 const etaNumEl = document.getElementById('detail-eta-number');
                 const homeEtaEl = document.getElementById('home-rider-eta');
+                const locationEl = document.getElementById('route-current-location');
+                const trackFillEl = document.getElementById('route-track-fill');
+                const markerEl = document.getElementById('route-scooter-marker');
 
-                if (timelineTextEl) timelineTextEl.innerText = ev.text;
+                if (timelineTextEl) {
+                    timelineTextEl.style.opacity = '0';
+                    setTimeout(() => {
+                        timelineTextEl.innerText = ev.text;
+                        timelineTextEl.style.transition = 'opacity 0.4s ease';
+                        timelineTextEl.style.opacity = '1';
+                    }, 200);
+                }
                 if (etaNumEl) etaNumEl.innerText = ev.eta;
                 if (homeEtaEl) homeEtaEl.innerText = ev.eta;
-            }, 25000);
+                if (locationEl) locationEl.innerText = ev.location;
+                if (trackFillEl) trackFillEl.style.width = `${ev.progress}%`;
+                if (markerEl) markerEl.style.left = `${ev.progress}%`;
+            }
+
+            // Initial render
+            updateRiderProgress();
+
+            setInterval(() => {
+                microEventIndex = (microEventIndex + 1) % riderMicroEvents.length;
+                updateRiderProgress();
+            }, 6000);
         }
         initRiderTimelineLoop();
 
