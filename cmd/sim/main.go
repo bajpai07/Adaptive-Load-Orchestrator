@@ -579,7 +579,42 @@ func main() {
 			if req.SessionID == "" {
 				req.SessionID = "global"
 			}
+
+			// Deduplicate order by parsing orderId
+			var orderObj struct {
+				OrderID string `json:"orderId"`
+				ID      string `json:"id"`
+			}
+			_ = json.Unmarshal(req.Order, &orderObj)
+			targetID := orderObj.OrderID
+			if targetID == "" {
+				targetID = orderObj.ID
+			}
+
 			redisKey := fmt.Sprintf("orders:%s", req.SessionID)
+
+			if targetID != "" {
+				existing, _ := rdb.LRange(r.Context(), redisKey, 0, -1).Result()
+				for _, item := range existing {
+					var exObj struct {
+						OrderID string `json:"orderId"`
+						ID      string `json:"id"`
+					}
+					if err := json.Unmarshal([]byte(item), &exObj); err == nil {
+						exID := exObj.OrderID
+						if exID == "" {
+							exID = exObj.ID
+						}
+						if exID == targetID {
+							// Already exists, skip duplicate insert
+							w.Header().Set("Content-Type", "application/json")
+							json.NewEncoder(w).Encode(map[string]string{"status": "duplicate_skipped"})
+							return
+						}
+					}
+				}
+			}
+
 			_ = rdb.LPush(r.Context(), redisKey, string(req.Order)).Err()
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})

@@ -2972,6 +2972,16 @@
             // Member Rows List Rendering
             const memberListEl = document.getElementById('detail-member-list');
             if (members.length > 0) {
+                const sid = getSessionId();
+                checkOrderPlacedStatus(); // ensures isCurrentOrderPlaced is up-to-date
+
+                // NOTE: Dependent on session-scoped order data in orderHistory/sessionStorage
+                const history = window.orderHistory || [];
+                const currentSessionPlacedOrder = history.find(o => 
+                    isCurrentOrderPlaced || 
+                    (o && (o.sessionId === sid || o.session_id === sid))
+                );
+
                 memberListEl.innerHTML = members.map(m => {
                     const initials = (m.display_name || "Member").split(' ').map(n => n[0]).join('').toUpperCase();
                     const color = m.avatar_color || "#8B5CF6";
@@ -2980,12 +2990,36 @@
                     let itemSummaryText = m.items_summary || "Group Order";
                     const mId = m.member_id;
                     const isSelf = (mId === memberID);
+                    let isSelfPaid = false;
 
                     if (isSelf) {
                         // Live User (Vikram Kumar / You / memberID)
-                        const userDetails = getUserCartDetails();
-                        orderPaise = userDetails.subtotalPaise;
-                        itemSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
+                        // NOTE: Dependent on session-scoped order data in orderHistory/sessionStorage
+                        if (isCurrentOrderPlaced || currentSessionPlacedOrder) {
+                            isSelfPaid = true;
+                            if (currentSessionPlacedOrder && currentSessionPlacedOrder.payablePaise > 0) {
+                                orderPaise = currentSessionPlacedOrder.payablePaise;
+                            } else if (currentSessionPlacedOrder && currentSessionPlacedOrder.itemTotalPaise > 0) {
+                                orderPaise = currentSessionPlacedOrder.itemTotalPaise;
+                            } else if (window.lastPayablePaise > 0) {
+                                orderPaise = window.lastPayablePaise;
+                            } else {
+                                const uDetails = getUserCartDetails();
+                                orderPaise = uDetails.subtotalPaise > 0 ? uDetails.subtotalPaise : 7500;
+                            }
+
+                            if (currentSessionPlacedOrder && currentSessionPlacedOrder.items && currentSessionPlacedOrder.items.length > 0) {
+                                const names = currentSessionPlacedOrder.items.map(i => i.name || i.product_name || "Item");
+                                itemSummaryText = names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2} more` : '');
+                            } else {
+                                const uDetails = getUserCartDetails();
+                                itemSummaryText = (uDetails.names && uDetails.names.length > 0) ? uDetails.summaryText : "Order Placed & Packed";
+                            }
+                        } else {
+                            const userDetails = getUserCartDetails();
+                            orderPaise = userDetails.subtotalPaise;
+                            itemSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
+                        }
                     } else if (mId === "mem-1") {
                         // Fixed seed member 1: Aarav Mehta (₹115.00)
                         if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise["mem-1"] > 0) {
@@ -3009,6 +3043,12 @@
                     const nameLabel = isSelf ? `${m.display_name || "Vikram Kumar"} <span class="you-pill-badge">(You)</span>` : (m.display_name || "Member");
 
                     let priceDisplayHTML = `<div class="member-price">₹${(orderPaise / 100).toFixed(2)}</div>`;
+                    if (isSelf && isSelfPaid) {
+                        priceDisplayHTML = `<div class="member-price" style="color: #059669; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                            ₹${(orderPaise / 100).toFixed(2)}
+                            <span style="background: #ECFDF5; color: #059669; font-size: 0.7rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; border: 1px solid #A7F3D0;">Paid ✓</span>
+                        </div>`;
+                    }
 
                     return `
                         <li class="member-row">
@@ -3659,9 +3699,6 @@
 
             if (!upiScreen) return;
 
-            enteredPinDigits = [];
-            updatePinDotsDisplay();
-
             if (loadingState) loadingState.style.display = 'none';
             if (keypadContainer) keypadContainer.style.display = 'grid';
             if (pinContainer) pinContainer.style.display = 'flex';
@@ -3675,6 +3712,7 @@
         }
 
         function closeUpiPinScreen() {
+            window.isProcessingPayment = false;
             const upiScreen = document.getElementById('upi-pin-screen');
             if (upiScreen) {
                 upiScreen.classList.remove('open');
@@ -3683,6 +3721,7 @@
         }
 
         function pressUpiKey(key) {
+            if (window.isProcessingPayment) return;
             if (key === 'clear') {
                 enteredPinDigits.pop();
             } else if (enteredPinDigits.length < 4) {
@@ -3708,6 +3747,9 @@
         }
 
         async function confirmUpiPin() {
+            if (window.isProcessingPayment) return;
+            window.isProcessingPayment = true;
+
             const loadingState = document.getElementById('upi-loading-state');
             const keypadContainer = document.getElementById('upi-keypad-container');
             const pinContainer = document.getElementById('upi-pin-container');
@@ -3754,9 +3796,17 @@
                 const userTotalEl = document.getElementById('user-cart-total');
                 if (userTotalEl) userTotalEl.innerText = "₹0.00";
 
-                // Save Order Snapshot to Order History (scoped to session)
+                // Defense-in-depth: Save Order Snapshot to Order History EXACTLY ONCE
                 if (!window.orderHistory) window.orderHistory = [];
-                window.orderHistory.unshift(session);
+                const targetId = session.orderId;
+                const existingIdx = window.orderHistory.findIndex(o => (o && (o.orderId === targetId || o.id === targetId)));
+                if (existingIdx === -1) {
+                    window.orderHistory.unshift(session);
+                } else {
+                    window.orderHistory[existingIdx] = session;
+                }
+                window.orderHistory = deduplicateOrders(window.orderHistory);
+
                 const sid = getSessionId();
                 const localKey = 'zepto_order_history_' + sid;
                 try {
