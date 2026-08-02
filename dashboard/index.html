@@ -2453,7 +2453,12 @@
             const assignedCount = trip.assigned_order_count || 4;
             const etaMin = 14;
             
-            let members = trip.members || [];
+            let members = (trip.members || []).filter(m => {
+                if ((m.member_id === "mem-web-304" || m.member_id === "mem-creator") && m.member_id !== memberID) {
+                    return false;
+                }
+                return true;
+            });
             const currentMemberCount = members.length;
             const isUserInMembers = members.some(m => m.member_id === memberID) || hasJoinedTrip;
             const targetCountForUser = isUserInMembers ? (currentMemberCount || 1) : currentMemberCount + 1;
@@ -2514,8 +2519,14 @@
                     let orderPaise = m.order_total_paise;
                     let itemSummaryText = m.items_summary || "Group Order";
                     const mId = m.member_id;
+                    const isSelf = (mId === memberID);
 
-                    if (mId === "mem-1") {
+                    if (isSelf) {
+                        // Live User (Vikram Kumar / You / memberID)
+                        const userDetails = getUserCartDetails();
+                        orderPaise = userDetails.subtotalPaise;
+                        itemSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
+                    } else if (mId === "mem-1") {
                         // Fixed seed member 1: Aarav Mehta (₹115.00)
                         if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise["mem-1"] > 0) {
                             orderPaise = window.liveMemberSubtotalsPaise["mem-1"];
@@ -2533,14 +2544,8 @@
                             orderPaise = 6000;
                             itemSummaryText = "Lay's Chips (52g), Coca-Cola (750ml)";
                         }
-                    } else {
-                        // Live User (Vikram Kumar / You / memberID / mem-web-304)
-                        const userDetails = getUserCartDetails();
-                        orderPaise = userDetails.subtotalPaise;
-                        itemSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
                     }
 
-                    const isSelf = (m.member_id === memberID || m.member_id === "mem-web-304");
                     const nameLabel = isSelf ? `${m.display_name || "Vikram Kumar"} <span class="you-pill-badge">(You)</span>` : (m.display_name || "Member");
 
                     // Paid Order Detection for Trip List (Issue 1)
