@@ -1944,6 +1944,10 @@
         const wsUrl = protocol + window.location.host + '/ws/groupcart';
         
         let ws;
+        let cartTotalPaise = 0;
+        let hasJoinedTrip = false;
+        let currentTripData = null;
+        let currentCartID = "";
         function getSessionId() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('reset') === 'true') {
