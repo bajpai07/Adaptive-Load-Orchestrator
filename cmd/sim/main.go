@@ -438,10 +438,7 @@ func main() {
 				req.FlatLocation = "Flat 304, Tower B"
 			}
 			if req.ItemsSummary == "" {
-				req.ItemsSummary = "Organic Eggs (6-pack), Greek Yogurt"
-			}
-			if req.OrderTotalPaise == 0 {
-				req.OrderTotalPaise = 22000
+				req.ItemsSummary = "Pending items in Group Cart"
 			}
 			if req.AvatarColor == "" {
 				req.AvatarColor = "#10B981"

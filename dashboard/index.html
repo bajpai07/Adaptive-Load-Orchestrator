@@ -2534,14 +2534,10 @@
                             itemSummaryText = "Lay's Chips (52g), Coca-Cola (750ml)";
                         }
                     } else {
-                        // Live User (Vikram Kumar / You / mem-web-304)
-                        if (window.liveMemberSubtotalsPaise && window.liveMemberSubtotalsPaise[mId] !== undefined) {
-                            orderPaise = window.liveMemberSubtotalsPaise[mId];
-                        }
-                        if (window.liveMemberItemSummaries && window.liveMemberItemSummaries[mId] !== undefined) {
-                            const userNames = window.liveMemberItemSummaries[mId];
-                            itemSummaryText = (userNames && userNames.length > 0) ? formatItemsSummary(userNames) : "Pending items in Group Cart";
-                        }
+                        // Live User (Vikram Kumar / You / memberID / mem-web-304)
+                        const userDetails = getUserCartDetails();
+                        orderPaise = userDetails.subtotalPaise;
+                        itemSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
                     }
 
                     const isSelf = (m.member_id === memberID || m.member_id === "mem-web-304");
@@ -2782,14 +2778,28 @@
             await syncTripWithLiveCart();
         }
 
+        function getUserCartDetails() {
+            const items = (window.lastCartData && window.lastCartData.items) ? window.lastCartData.items : [];
+            const ownItems = items.filter(i => 
+                !i.added_by_member_id || 
+                i.added_by_member_id === memberID || 
+                i.added_by_member_id === "mem-web-304" || 
+                i.added_by_member_id === "mem-creator"
+            );
+            const subtotalPaise = ownItems.reduce((sum, i) => sum + i.price_paise, 0);
+            const names = ownItems.map(i => i.name);
+            return {
+                ownItems,
+                subtotalPaise,
+                names,
+                summaryText: formatItemsSummary(names)
+            };
+        }
+
         async function syncTripWithLiveCart() {
-            const stableOrderID = "ord-web-304";
-            const stableMemberID = "mem-web-304";
-            
-            const userItems = (window.rawCartItems || []).filter(i => (i.added_by_member_id === memberID || i.added_by_member_id === "mem-web-304"));
-            const userItemNames = userItems.map(i => i.name);
-            const itemsSummaryText = formatItemsSummary(userItemNames);
-            const userSubtotalPaise = userItems.reduce((sum, i) => sum + i.price_paise, 0);
+            const userDetails = getUserCartDetails();
+            const itemsSummaryText = (userDetails.names && userDetails.names.length > 0) ? userDetails.summaryText : "Pending items in Group Cart";
+            const userSubtotalPaise = userDetails.subtotalPaise;
 
             const targetTripID = (currentTripData && currentTripData.id) ? currentTripData.id : "trip-rider-1";
 
@@ -2800,7 +2810,7 @@
                     body: JSON.stringify({
                         trip_id: targetTripID,
                         order_id: stableOrderID,
-                        member_id: stableMemberID,
+                        member_id: memberID,
                         display_name: "Vikram Kumar",
                         flat_location: "Flat 304, Tower B",
                         items_summary: itemsSummaryText,
@@ -3103,16 +3113,8 @@
 
             if (!summaryScreen || !itemsListEl) return;
 
-            const cart = window.lastCartData || { items: [] };
-            const allItems = cart.items || [];
-            
-            // Filter to ONLY the current user's own items
-            const ownItems = allItems.filter(i => 
-                !i.added_by_member_id || 
-                i.added_by_member_id === memberID || 
-                i.added_by_member_id === "mem-web-304" || 
-                i.added_by_member_id === "mem-creator"
-            );
+            const userDetails = getUserCartDetails();
+            const ownItems = userDetails.ownItems;
 
             itemsListEl.innerHTML = '';
             let itemTotalPaise = 0;
