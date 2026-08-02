@@ -2621,6 +2621,18 @@
         // Monotonic Countdown Single Source of Truth for ETA & 5 Checkpoints
         let remainingSeconds = 14 * 60; // Starts at 14 mins (840 seconds)
         let lastTimelineText = "";
+        let isPaymentCompleted = false; // Frozen at 14 min / Checkpoint 1 until payment completed!
+
+        function checkPaymentStatus() {
+            if (window.orderHistory && window.orderHistory.length > 0) {
+                isPaymentCompleted = true;
+            }
+        }
+
+        function startTripCountdown() {
+            isPaymentCompleted = true;
+            remainingSeconds = 14 * 60; // Reset to 14 mins upon payment completion
+        }
 
         const STAGES = [
             { id: 0, minSeconds: 720, label: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
@@ -2632,11 +2644,14 @@
 
         function initRiderTimelineLoop() {
             function tickMonotonicCountdown() {
-                // Ensure remainingSeconds ONLY decreases (monotonic)
-                // Decreases by 12s per 1s tick (full 840s / 14min journey completes in ~70 real seconds)
-                if (remainingSeconds > 0) {
-                    remainingSeconds -= 12;
-                    if (remainingSeconds < 0) remainingSeconds = 0;
+                checkPaymentStatus();
+
+                // Countdown ONLY advances AFTER payment completion
+                if (isPaymentCompleted) {
+                    if (remainingSeconds > 0) {
+                        remainingSeconds -= 12;
+                        if (remainingSeconds < 0) remainingSeconds = 0;
+                    }
                 }
 
                 // Single source of truth ETA: Math.ceil(remainingSeconds / 60)
@@ -3612,6 +3627,9 @@
                     }).catch(err => console.error("Save order to backend error:", err));
                 } catch (e) {}
                 updateOrderHistoryBadge();
+
+                // Trigger rider trip countdown progression upon payment completion
+                startTripCountdown();
 
                 // Refresh Screen B (Group Trip Page) so Paid badge displays immediately
                 if (currentTripData) {
