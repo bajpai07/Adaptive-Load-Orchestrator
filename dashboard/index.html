@@ -2920,6 +2920,16 @@
                 }
                 return true;
             });
+
+            // Sort members array so current logged-in user (Vikram Kumar) is ALWAYS at the TOP (index 0)
+            members.sort((a, b) => {
+                const aIsSelf = (a.member_id === memberID);
+                const bIsSelf = (b.member_id === memberID);
+                if (aIsSelf && !bIsSelf) return -1;
+                if (!aIsSelf && bIsSelf) return 1;
+                return 0;
+            });
+
             const currentMemberCount = members.length;
             const isUserInMembers = members.some(m => m.member_id === memberID) || hasJoinedTrip;
             const targetCountForUser = isUserInMembers ? (currentMemberCount || 1) : currentMemberCount + 1;
