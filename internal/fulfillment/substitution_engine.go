@@ -53,6 +53,14 @@ func NewSubstitutionEngine() *SubstitutionEngine {
 		{SKU: "sku-dahi", Name: "Amul Masti Dahi (400g)", Category: "fresh-dairy", Brand: "Amul", PricePaise: 4500, StockQuantity: 0}, // Default out-of-stock for demo
 		{SKU: "sku-coke", Name: "Coca-Cola Bottle (750ml)", Category: "snacks-drinks", Brand: "Coca-Cola", PricePaise: 4000, StockQuantity: 18},
 
+		// New Zepto Quick-Commerce Catalog Items
+		{SKU: "sku-bread", Name: "Britannia Whole Wheat Bread (400g)", Category: "bakery", Brand: "Britannia", PricePaise: 4500, StockQuantity: 25},
+		{SKU: "sku-noodles", Name: "Maggi Masala Noodles (4-pack 280g)", Category: "snacks-drinks", Brand: "Maggi", PricePaise: 5800, StockQuantity: 30},
+		{SKU: "sku-tomatoes", Name: "Fresh Hybrid Tomatoes (500g)", Category: "fresh-produce", Brand: "Zepto Fresh", PricePaise: 2800, StockQuantity: 40},
+		{SKU: "sku-butter", Name: "Amul Butter Salted (100g)", Category: "fresh-dairy", Brand: "Amul", PricePaise: 5600, StockQuantity: 20},
+		{SKU: "sku-bhujia", Name: "Haldiram's Bhujia Sev (150g)", Category: "snacks-drinks", Brand: "Haldiram's", PricePaise: 3500, StockQuantity: 35},
+		{SKU: "sku-juice", Name: "Real Power Orange Juice (1L)", Category: "snacks-drinks", Brand: "Real", PricePaise: 11000, StockQuantity: 15},
+
 		// Optimal Substitute Candidates
 		{SKU: "sku-eggs-sub", Name: "Organic Country Eggs (6-pack)", Category: "fresh-dairy", Brand: "Farm Fresh", PricePaise: 7500, StockQuantity: 25},
 		{SKU: "sku-dahi-sub", Name: "Mother Dairy Classic Dahi (400g)", Category: "fresh-dairy", Brand: "Mother Dairy", PricePaise: 5000, StockQuantity: 30},
@@ -131,6 +139,34 @@ func ScoreSubstitute(target *ProductCatalogItem, candidate *ProductCatalogItem) 
 
 	if candidate.StockQuantity <= 0 || candidate.SKU == target.SKU || candidate.Name == target.Name {
 		res.ExplanationReason = "Candidate out of stock or identical to target"
+		return res
+	}
+
+	targetLower := strings.ToLower(target.Name)
+	candLower := strings.ToLower(candidate.Name)
+
+	// Strict Subcategory Matching: Dahi MUST swap with Dahi, Milk with Milk, Eggs with Eggs
+	isTargetDahi := strings.Contains(targetLower, "dahi") || strings.Contains(targetLower, "curd") || strings.Contains(targetLower, "yogurt")
+	isCandDahi := strings.Contains(candLower, "dahi") || strings.Contains(candLower, "curd") || strings.Contains(candLower, "yogurt")
+
+	if isTargetDahi && !isCandDahi {
+		res.ExplanationReason = "Candidate is not a Dahi/Curd product"
+		return res
+	}
+
+	isTargetMilk := strings.Contains(targetLower, "milk") && !isTargetDahi
+	isCandMilk := strings.Contains(candLower, "milk") && !isCandDahi
+
+	if isTargetMilk && !isCandMilk {
+		res.ExplanationReason = "Candidate is not a Milk product"
+		return res
+	}
+
+	isTargetEggs := strings.Contains(targetLower, "egg")
+	isCandEggs := strings.Contains(candLower, "egg")
+
+	if isTargetEggs && !isCandEggs {
+		res.ExplanationReason = "Candidate is not an Egg product"
 		return res
 	}
 
