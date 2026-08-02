@@ -985,12 +985,13 @@
             margin-top: 2px;
         }
 
-        /* Checkpoint Route Track Styles */
+        /* Checkpoint Route Track Styles (5-Node Mobile Refined Layout) */
         .checkpoint-track-container {
             margin-top: 16px;
             padding-top: 14px;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
             width: 100%;
+            overflow-x: auto;
         }
 
         .checkpoint-nodes-row {
@@ -998,66 +999,68 @@
             align-items: flex-start;
             justify-content: space-between;
             position: relative;
+            min-width: 320px;
         }
 
         .checkpoint-node-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             z-index: 2;
             flex: 1;
             text-align: center;
         }
 
         .checkpoint-dot {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.4s ease;
+            flex-shrink: 0;
         }
 
         .cp-completed {
             background: var(--zepto-purple-bright);
-            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 2px 5px rgba(124, 58, 237, 0.25);
         }
 
         .cp-active {
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             background: #FFFFFF;
-            border: 3px solid var(--zepto-purple-bright);
-            box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.18), 0 2px 8px rgba(124, 58, 237, 0.25);
+            border: 2.5px solid var(--zepto-purple-bright);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18), 0 2px 6px rgba(124, 58, 237, 0.2);
             animation: cpGlowPulse 2s infinite ease-in-out;
         }
 
         .cp-active-inner {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--zepto-purple-bright);
         }
 
         @keyframes cpGlowPulse {
-            0% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 2px 8px rgba(124, 58, 237, 0.25); }
-            50% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0.08), 0 2px 8px rgba(124, 58, 237, 0.25); }
-            100% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 2px 8px rgba(124, 58, 237, 0.25); }
+            0% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25), 0 2px 6px rgba(124, 58, 237, 0.2); }
+            50% { box-shadow: 0 0 0 7px rgba(124, 58, 237, 0.06), 0 2px 6px rgba(124, 58, 237, 0.2); }
+            100% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25), 0 2px 6px rgba(124, 58, 237, 0.2); }
         }
 
         .cp-upcoming {
             background: #FFFFFF;
-            border: 2px solid #CBD5E1;
+            border: 1.5px solid #CBD5E1;
         }
 
         .checkpoint-line-segment {
-            height: 3px;
+            height: 2.5px;
             flex: 1;
-            margin-top: 9px;
-            margin-left: -10px;
-            margin-right: -10px;
+            margin-top: 7px;
+            margin-left: -8px;
+            margin-right: -8px;
             z-index: 1;
             transition: all 0.4s ease;
         }
@@ -1073,11 +1076,11 @@
         }
 
         .checkpoint-label {
-            font-size: 0.65rem;
+            font-size: 0.60rem;
             font-weight: 500;
             color: var(--text-muted);
-            line-height: 1.25;
-            max-width: 90px;
+            line-height: 1.2;
+            max-width: 62px;
             transition: color 0.3s ease, font-weight 0.3s ease;
         }
 
@@ -1775,7 +1778,7 @@
                         </div>
                     </div>
 
-                    <!-- 3-Checkpoint Route Track Container -->
+                    <!-- 5-Checkpoint Route Track Container -->
                     <div class="checkpoint-track-container">
                         <div class="checkpoint-nodes-row">
                             <!-- Node 1: Dark Store 1 -->
@@ -1786,18 +1789,34 @@
 
                             <div class="checkpoint-line-segment" id="cp-line-1"></div>
 
-                            <!-- Node 2: Mid-route Stage -->
+                            <!-- Node 2: Sector 42 Expressway -->
                             <div class="checkpoint-node-wrapper">
                                 <div class="checkpoint-dot" id="cp-dot-2"></div>
-                                <span class="checkpoint-label" id="cp-label-2">Golf Course Road Flyover</span>
+                                <span class="checkpoint-label" id="cp-label-2">Sector 42 Expressway</span>
                             </div>
 
                             <div class="checkpoint-line-segment" id="cp-line-2"></div>
 
-                            <!-- Node 3: Destination Tower B -->
+                            <!-- Node 3: Aravali Heights Gate -->
                             <div class="checkpoint-node-wrapper">
                                 <div class="checkpoint-dot" id="cp-dot-3"></div>
-                                <span class="checkpoint-label" id="cp-label-3">Tower B 📍</span>
+                                <span class="checkpoint-label" id="cp-label-3">Aravali Heights Gate</span>
+                            </div>
+
+                            <div class="checkpoint-line-segment" id="cp-line-3"></div>
+
+                            <!-- Node 4: Tower B Lobby -->
+                            <div class="checkpoint-node-wrapper">
+                                <div class="checkpoint-dot" id="cp-dot-4"></div>
+                                <span class="checkpoint-label" id="cp-label-4">Tower B Lobby</span>
+                            </div>
+
+                            <div class="checkpoint-line-segment" id="cp-line-4"></div>
+
+                            <!-- Node 5: Doorstep Flat 304 -->
+                            <div class="checkpoint-node-wrapper">
+                                <div class="checkpoint-dot" id="cp-dot-5"></div>
+                                <span class="checkpoint-label" id="cp-label-5">Doorstep 📍</span>
                             </div>
                         </div>
                     </div>
@@ -2599,102 +2618,109 @@
             }, stepTime);
         }
 
-        // Rider Timeline Micro-Events Simulation Loop with Dynamic Checkpoint Nodes
-        const riderMicroEvents = [
-            { stage: 0, eta: 14, location: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
-            { stage: 1, eta: 11, location: "Sector 42 Expressway", text: "Rahul Sharma en route via Sector 42 Expressway ⚡" },
-            { stage: 1, eta: 7, location: "Golf Course Road Flyover", text: "Rahul Sharma crossing Golf Course Road Flyover 🛵" },
-            { stage: 1, eta: 3, location: "Aravali Heights Gate", text: "Rahul Sharma entering Aravali Heights Main Gate" },
-            { stage: 2, eta: 1, location: "Tower B Lift Lobby", text: "Rahul Sharma arrived at Tower B Lift Lobby ⚡" }
+        // Monotonic Countdown Single Source of Truth for ETA & 5 Checkpoints
+        let remainingSeconds = 14 * 60; // Starts at 14 mins (840 seconds)
+        let lastTimelineText = "";
+
+        const STAGES = [
+            { id: 0, minSeconds: 720, label: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
+            { id: 1, minSeconds: 480, label: "Sector 42 Expressway", text: "Rahul Sharma en route via Sector 42 Expressway ⚡" },
+            { id: 2, minSeconds: 240, label: "Aravali Heights Gate", text: "Rahul Sharma entering Aravali Heights Main Gate" },
+            { id: 3, minSeconds: 60,  label: "Tower B Lobby", text: "Rahul Sharma arrived at Tower B Lift Lobby ⚡" },
+            { id: 4, minSeconds: 0,   label: "Doorstep 📍", text: "Rahul Sharma arriving at your doorstep Flat 304 🎉" }
         ];
-        let microEventIndex = 2; // Start at Golf Course Road Flyover (7 min)
 
         function initRiderTimelineLoop() {
-            function updateRiderProgress() {
-                const ev = riderMicroEvents[microEventIndex];
-                
-                const timelineTextEl = document.getElementById('rider-micro-event-text');
-                const etaNumEl = document.getElementById('detail-eta-number');
-                const homeEtaEl = document.getElementById('home-rider-eta');
+            function tickMonotonicCountdown() {
+                // Ensure remainingSeconds ONLY decreases (monotonic)
+                if (remainingSeconds > 0) {
+                    remainingSeconds -= 2; // Decreases by 2s per tick (simulated smooth time speedup)
+                    if (remainingSeconds < 0) remainingSeconds = 0;
+                }
 
-                if (timelineTextEl) {
+                // Single source of truth ETA: Math.ceil(remainingSeconds / 60)
+                const currentMins = Math.ceil(remainingSeconds / 60);
+
+                // Determine active stage index
+                let activeStageIndex = 0;
+                if (remainingSeconds >= 720) {
+                    activeStageIndex = 0; // Dark Store 1 (12-14 min)
+                } else if (remainingSeconds >= 480) {
+                    activeStageIndex = 1; // Sector 42 Expressway (8-11 min)
+                } else if (remainingSeconds >= 240) {
+                    activeStageIndex = 2; // Aravali Heights Gate (4-7 min)
+                } else if (remainingSeconds >= 60) {
+                    activeStageIndex = 3; // Tower B Lobby (1-3 min)
+                } else {
+                    activeStageIndex = 4; // Doorstep (0 min)
+                }
+
+                const currentStageObj = STAGES[activeStageIndex];
+
+                // Update Hero ETA Numeral
+                const etaNumEl = document.getElementById('detail-eta-number');
+                if (etaNumEl) etaNumEl.innerText = currentMins;
+
+                // Update Live Dispatch Timeline Text
+                const timelineTextEl = document.getElementById('rider-micro-event-text');
+                if (timelineTextEl && lastTimelineText !== currentStageObj.text) {
+                    lastTimelineText = currentStageObj.text;
                     timelineTextEl.style.opacity = '0';
                     setTimeout(() => {
-                        timelineTextEl.innerText = ev.text;
+                        timelineTextEl.innerText = currentStageObj.text;
                         timelineTextEl.style.transition = 'opacity 0.4s ease';
                         timelineTextEl.style.opacity = '1';
                     }, 200);
                 }
-                if (etaNumEl) etaNumEl.innerText = ev.eta;
-                if (homeEtaEl) homeEtaEl.innerText = ev.eta;
 
-                // Update Checkpoint Nodes & Lines
-                const cpDot1 = document.getElementById('cp-dot-1');
-                const cpDot2 = document.getElementById('cp-dot-2');
-                const cpDot3 = document.getElementById('cp-dot-3');
-                const cpLine1 = document.getElementById('cp-line-1');
-                const cpLine2 = document.getElementById('cp-line-2');
-                const cpLabel1 = document.getElementById('cp-label-1');
-                const cpLabel2 = document.getElementById('cp-label-2');
-                const cpLabel3 = document.getElementById('cp-label-3');
-
-                const checkmarkSVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>`;
+                // Render 5 Checkpoint Nodes & Lines
+                const checkmarkSVG = `<svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>`;
                 const activeInnerDot = `<div class="cp-active-inner"></div>`;
 
-                // Ensure 3 distinct checkpoint stage labels
-                if (cpLabel1) cpLabel1.innerText = "Dark Store 1";
-                if (cpLabel3) cpLabel3.innerText = "Tower B 📍";
+                for (let i = 1; i <= 5; i++) {
+                    const stageIdx = i - 1;
+                    const dotEl = document.getElementById(`cp-dot-${i}`);
+                    const labelEl = document.getElementById(`cp-label-${i}`);
+                    const lineEl = document.getElementById(`cp-line-${i}`);
 
-                if (ev.stage === 0) {
-                    // Early Stage: Dark Store 1 Active
-                    if (cpLabel2) cpLabel2.innerText = "Sector 42 Expressway";
+                    if (dotEl) {
+                        if (stageIdx < activeStageIndex) {
+                            dotEl.className = "checkpoint-dot cp-completed";
+                            dotEl.innerHTML = checkmarkSVG;
+                        } else if (stageIdx === activeStageIndex) {
+                            dotEl.className = "checkpoint-dot cp-active";
+                            dotEl.innerHTML = activeInnerDot;
+                        } else {
+                            dotEl.className = "checkpoint-dot cp-upcoming";
+                            dotEl.innerHTML = "";
+                        }
+                    }
 
-                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-active"; cpDot1.innerHTML = activeInnerDot; }
-                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-upcoming"; cpDot2.innerHTML = ""; }
-                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
-                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-upcoming";
-                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-upcoming";
+                    if (labelEl) {
+                        if (stageIdx === activeStageIndex) {
+                            labelEl.className = "checkpoint-label cp-label-active";
+                        } else {
+                            labelEl.className = "checkpoint-label";
+                        }
+                    }
 
-                    if (cpLabel1) cpLabel1.className = "checkpoint-label cp-label-active";
-                    if (cpLabel2) cpLabel2.className = "checkpoint-label";
-                    if (cpLabel3) cpLabel3.className = "checkpoint-label";
-                } else if (ev.stage === 1) {
-                    // Mid-Route: Dark Store Completed, Node 2 Active with live location
-                    if (cpLabel2) cpLabel2.innerText = ev.location;
-
-                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
-                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-active"; cpDot2.innerHTML = activeInnerDot; }
-                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
-                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-filled";
-                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-upcoming";
-
-                    if (cpLabel1) cpLabel1.className = "checkpoint-label";
-                    if (cpLabel2) cpLabel2.className = "checkpoint-label cp-label-active";
-                    if (cpLabel3) cpLabel3.className = "checkpoint-label";
-                } else if (ev.stage === 2) {
-                    // Arrived: Destination Active, Node 1 & 2 Completed
-                    if (cpLabel2) cpLabel2.innerText = "Aravali Heights Gate";
-                    if (cpLabel3) cpLabel3.innerText = ev.location;
-
-                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
-                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-completed"; cpDot2.innerHTML = checkmarkSVG; }
-                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-active"; cpDot3.innerHTML = activeInnerDot; }
-                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-filled";
-                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-filled";
-
-                    if (cpLabel1) cpLabel1.className = "checkpoint-label";
-                    if (cpLabel2) cpLabel2.className = "checkpoint-label";
-                    if (cpLabel3) cpLabel3.className = "checkpoint-label cp-label-active";
+                    if (lineEl && i <= 4) {
+                        if (stageIdx < activeStageIndex) {
+                            lineEl.className = "checkpoint-line-segment cp-line-filled";
+                        } else {
+                            lineEl.className = "checkpoint-line-segment cp-line-upcoming";
+                        }
+                    }
                 }
             }
 
             // Initial render
-            updateRiderProgress();
+            tickMonotonicCountdown();
 
+            // Run monotonic countdown tick every 1.5s
             setInterval(() => {
-                microEventIndex = (microEventIndex + 1) % riderMicroEvents.length;
-                updateRiderProgress();
-            }, 6000);
+                tickMonotonicCountdown();
+            }, 1500);
         }
         initRiderTimelineLoop();
 
