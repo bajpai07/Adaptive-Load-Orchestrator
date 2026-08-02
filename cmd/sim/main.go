@@ -545,6 +545,16 @@ func main() {
 			})
 		})
 
+		http.HandleFunc("/op", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./dashboard/ops_console.html")
+		})
+		http.HandleFunc("/op/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./dashboard/ops_console.html")
+		})
+		http.HandleFunc("/ops", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./dashboard/ops_console.html")
+		})
+
 		http.Handle("/", http.FileServer(http.Dir("./dashboard")))
 		log.Printf("HTTP Server listening continuously on :%d ...", port)
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
