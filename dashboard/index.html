@@ -2621,17 +2621,22 @@
         // Monotonic Countdown Single Source of Truth for ETA & 5 Checkpoints
         let remainingSeconds = 14 * 60; // Starts at 14 mins (840 seconds)
         let lastTimelineText = "";
-        let isPaymentCompleted = false; // Frozen at 14 min / Checkpoint 1 until payment completed!
+        let isCurrentOrderPlaced = false; // Strictly frozen at 14 min / Checkpoint 1 until a NEW order is placed!
 
-        function checkPaymentStatus() {
-            if (window.orderHistory && window.orderHistory.length > 0) {
-                isPaymentCompleted = true;
+        function checkOrderPlacedStatus() {
+            const sid = getSessionId();
+            const placedKey = 'zepto_order_placed_' + sid;
+            if (sessionStorage.getItem(placedKey) === 'true') {
+                isCurrentOrderPlaced = true;
             }
         }
 
         function startTripCountdown() {
-            isPaymentCompleted = true;
-            remainingSeconds = 14 * 60; // Reset to 14 mins upon payment completion
+            const sid = getSessionId();
+            const placedKey = 'zepto_order_placed_' + sid;
+            sessionStorage.setItem(placedKey, 'true');
+            isCurrentOrderPlaced = true;
+            remainingSeconds = 14 * 60; // Reset to 14 mins upon new order placement
         }
 
         const STAGES = [
@@ -2644,10 +2649,10 @@
 
         function initRiderTimelineLoop() {
             function tickMonotonicCountdown() {
-                checkPaymentStatus();
+                checkOrderPlacedStatus();
 
-                // Countdown ONLY advances AFTER payment completion
-                if (isPaymentCompleted) {
+                // Rider movement & ETA countdown ONLY advance AFTER the current order is placed!
+                if (isCurrentOrderPlaced) {
                     if (remainingSeconds > 0) {
                         remainingSeconds -= 12;
                         if (remainingSeconds < 0) remainingSeconds = 0;
