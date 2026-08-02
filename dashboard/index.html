@@ -2641,10 +2641,14 @@
                 const checkmarkSVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>`;
                 const activeInnerDot = `<div class="cp-active-inner"></div>`;
 
-                if (cpLabel2) cpLabel2.innerText = ev.location;
+                // Ensure 3 distinct checkpoint stage labels
+                if (cpLabel1) cpLabel1.innerText = "Dark Store 1";
+                if (cpLabel3) cpLabel3.innerText = "Tower B 📍";
 
                 if (ev.stage === 0) {
                     // Early Stage: Dark Store 1 Active
+                    if (cpLabel2) cpLabel2.innerText = "Sector 42 Expressway";
+
                     if (cpDot1) { cpDot1.className = "checkpoint-dot cp-active"; cpDot1.innerHTML = activeInnerDot; }
                     if (cpDot2) { cpDot2.className = "checkpoint-dot cp-upcoming"; cpDot2.innerHTML = ""; }
                     if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
@@ -2655,7 +2659,9 @@
                     if (cpLabel2) cpLabel2.className = "checkpoint-label";
                     if (cpLabel3) cpLabel3.className = "checkpoint-label";
                 } else if (ev.stage === 1) {
-                    // Mid-Route: Dark Store Completed, Node 2 Active
+                    // Mid-Route: Dark Store Completed, Node 2 Active with live location
+                    if (cpLabel2) cpLabel2.innerText = ev.location;
+
                     if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
                     if (cpDot2) { cpDot2.className = "checkpoint-dot cp-active"; cpDot2.innerHTML = activeInnerDot; }
                     if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
@@ -2667,6 +2673,9 @@
                     if (cpLabel3) cpLabel3.className = "checkpoint-label";
                 } else if (ev.stage === 2) {
                     // Arrived: Destination Active, Node 1 & 2 Completed
+                    if (cpLabel2) cpLabel2.innerText = "Aravali Heights Gate";
+                    if (cpLabel3) cpLabel3.innerText = ev.location;
+
                     if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
                     if (cpDot2) { cpDot2.className = "checkpoint-dot cp-completed"; cpDot2.innerHTML = checkmarkSVG; }
                     if (cpDot3) { cpDot3.className = "checkpoint-dot cp-active"; cpDot3.innerHTML = activeInnerDot; }
