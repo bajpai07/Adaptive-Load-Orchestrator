@@ -891,40 +891,44 @@
         }
 
         /* Screen B Rider Card */
+        /* Screen B Rider Card - Elevated Refined Design */
         .rider-detail-card {
             background: #FFFFFF;
-            border-radius: 18px;
-            padding: 16px;
-            box-shadow: var(--shadow-subtle);
-            border: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            margin-bottom: 16px;
         }
 
         .rider-detail-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .rider-avatar-large {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: var(--orange-avatar);
-            color: #FFFFFF;
+            background: #F3E8FF;
+            border: 2px solid transparent;
+            background-image: linear-gradient(#F3E8FF, #F3E8FF), linear-gradient(135deg, var(--zepto-purple-bright), #C084FC);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            color: var(--zepto-purple-bright);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            flex-shrink: 0;
         }
 
         .rider-detail-info h4 {
             margin: 0 0 2px 0;
-            font-size: 0.95rem;
+            font-size: 0.98rem;
             font-weight: 800;
+            color: var(--text-dark);
         }
 
         .rider-detail-info p {
@@ -932,35 +936,6 @@
             font-size: 0.75rem;
             color: var(--text-muted);
             font-weight: 500;
-        }
-
-        .rider-eta-block {
-            text-align: right;
-        }
-
-        @keyframes liveDotPulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-
-        @keyframes markerPulse {
-            0% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 2px 4px rgba(0,0,0,0.15); }
-            50% { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.1), 0 2px 4px rgba(0,0,0,0.15); }
-            100% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 2px 4px rgba(0,0,0,0.15); }
-        }
-
-        .rider-avatar-large {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--zepto-purple-bright), #6D28D9);
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
-            flex-shrink: 0;
         }
 
         .live-driving-badge {
@@ -983,73 +958,132 @@
             animation: liveDotPulse 1.8s infinite;
         }
 
-        .rider-route-track-container {
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-            width: 100%;
+        @keyframes liveDotPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        .route-track-labels {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .route-stage-label {
-            transition: color 0.3s ease, font-weight 0.3s ease;
-        }
-
-        .route-stage-active {
-            color: var(--zepto-purple-bright) !important;
-            font-weight: 800 !important;
-        }
-
-        .route-track-bar {
-            height: 4px;
-            background: #E2E8F0;
-            border-radius: 99px;
-            position: relative;
-            margin: 6px 2px 2px 2px;
-        }
-
-        .route-track-fill {
-            height: 100%;
-            background: var(--zepto-purple-bright);
-            border-radius: 99px;
-            transition: width 0.8s ease-in-out;
-        }
-
-        .route-marker-pin {
-            position: absolute;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            transition: left 0.8s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-        }
-
-        .marker-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--zepto-purple-bright);
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25), 0 2px 4px rgba(0,0,0,0.15);
-            animation: markerPulse 2s infinite ease-in-out;
+        .rider-eta-block {
+            text-align: right;
         }
 
         .eta-num {
-            font-size: 1.6rem;
+            font-size: 2.2rem;
             font-weight: 900;
             color: var(--zepto-purple-bright);
             line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .eta-lbl {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Checkpoint Route Track Styles */
+        .checkpoint-track-container {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+
+        .checkpoint-nodes-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .checkpoint-node-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            z-index: 2;
+            flex: 1;
+            text-align: center;
+        }
+
+        .checkpoint-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+
+        .cp-completed {
+            background: var(--zepto-purple-bright);
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+        }
+
+        .cp-active {
+            width: 22px;
+            height: 22px;
+            background: #FFFFFF;
+            border: 3px solid var(--zepto-purple-bright);
+            box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.18), 0 2px 8px rgba(124, 58, 237, 0.25);
+            animation: cpGlowPulse 2s infinite ease-in-out;
+        }
+
+        .cp-active-inner {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--zepto-purple-bright);
+        }
+
+        @keyframes cpGlowPulse {
+            0% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 2px 8px rgba(124, 58, 237, 0.25); }
+            50% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0.08), 0 2px 8px rgba(124, 58, 237, 0.25); }
+            100% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.25), 0 2px 8px rgba(124, 58, 237, 0.25); }
+        }
+
+        .cp-upcoming {
+            background: #FFFFFF;
+            border: 2px solid #CBD5E1;
+        }
+
+        .checkpoint-line-segment {
+            height: 3px;
+            flex: 1;
+            margin-top: 9px;
+            margin-left: -10px;
+            margin-right: -10px;
+            z-index: 1;
+            transition: all 0.4s ease;
+        }
+
+        .cp-line-filled {
+            background: var(--zepto-purple-bright);
+        }
+
+        .cp-line-upcoming {
+            background: #E2E8F0;
+            border-top: 1.5px dashed #CBD5E1;
+            height: 0;
+        }
+
+        .checkpoint-label {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            line-height: 1.25;
+            max-width: 90px;
+            transition: color 0.3s ease, font-weight 0.3s ease;
+        }
+
+        .cp-label-active {
+            font-weight: 800 !important;
+            color: var(--text-dark) !important;
         }
 
         .eta-lbl {
@@ -1716,11 +1750,11 @@
 
             <div class="overlay-content">
                 <!-- Rider Detail Card -->
-                <div class="rider-detail-card" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div class="rider-detail-card" style="flex-direction: column; align-items: stretch;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="rider-detail-left">
                             <div class="rider-avatar-large">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--zepto-purple-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="7" cy="17" r="2.5"/>
                                     <circle cx="17" cy="17" r="2.5"/>
                                     <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h2"/>
@@ -1741,17 +1775,29 @@
                         </div>
                     </div>
 
-                    <!-- Live Route Track Bar -->
-                    <div class="rider-route-track-container">
-                        <div class="route-track-labels">
-                            <span class="route-stage-label">Dark Store 1</span>
-                            <span id="route-current-location" class="route-stage-label route-stage-active">Golf Course Road Flyover</span>
-                            <span class="route-stage-label">Tower B 📍</span>
-                        </div>
-                        <div class="route-track-bar">
-                            <div class="route-track-fill" id="route-track-fill" style="width: 65%;"></div>
-                            <div class="route-marker-pin" id="route-scooter-marker" style="left: 65%;">
-                                <div class="marker-dot"></div>
+                    <!-- 3-Checkpoint Route Track Container -->
+                    <div class="checkpoint-track-container">
+                        <div class="checkpoint-nodes-row">
+                            <!-- Node 1: Dark Store 1 -->
+                            <div class="checkpoint-node-wrapper">
+                                <div class="checkpoint-dot" id="cp-dot-1"></div>
+                                <span class="checkpoint-label" id="cp-label-1">Dark Store 1</span>
+                            </div>
+
+                            <div class="checkpoint-line-segment" id="cp-line-1"></div>
+
+                            <!-- Node 2: Mid-route Stage -->
+                            <div class="checkpoint-node-wrapper">
+                                <div class="checkpoint-dot" id="cp-dot-2"></div>
+                                <span class="checkpoint-label" id="cp-label-2">Golf Course Road Flyover</span>
+                            </div>
+
+                            <div class="checkpoint-line-segment" id="cp-line-2"></div>
+
+                            <!-- Node 3: Destination Tower B -->
+                            <div class="checkpoint-node-wrapper">
+                                <div class="checkpoint-dot" id="cp-dot-3"></div>
+                                <span class="checkpoint-label" id="cp-label-3">Tower B 📍</span>
                             </div>
                         </div>
                     </div>
@@ -2553,13 +2599,13 @@
             }, stepTime);
         }
 
-        // Rider Timeline Micro-Events Simulation Loop with Dynamic Route Track Animation
+        // Rider Timeline Micro-Events Simulation Loop with Dynamic Checkpoint Nodes
         const riderMicroEvents = [
-            { eta: 14, progress: 15, location: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
-            { eta: 11, progress: 40, location: "Sector 42 Expressway", text: "Rahul Sharma en route via Sector 42 Expressway ⚡" },
-            { eta: 7, progress: 65, location: "Golf Course Road Flyover", text: "Rahul Sharma crossing Golf Course Road Flyover 🛵" },
-            { eta: 3, progress: 88, location: "Aravali Heights Gate", text: "Rahul Sharma entering Aravali Heights Main Gate" },
-            { eta: 1, progress: 98, location: "Tower B Lift Lobby", text: "Rahul Sharma arrived at Tower B Lift Lobby ⚡" }
+            { stage: 0, eta: 14, location: "Dark Store 1", text: "Order picked up & packed at Dark Store 1" },
+            { stage: 1, eta: 11, location: "Sector 42 Expressway", text: "Rahul Sharma en route via Sector 42 Expressway ⚡" },
+            { stage: 1, eta: 7, location: "Golf Course Road Flyover", text: "Rahul Sharma crossing Golf Course Road Flyover 🛵" },
+            { stage: 1, eta: 3, location: "Aravali Heights Gate", text: "Rahul Sharma entering Aravali Heights Main Gate" },
+            { stage: 2, eta: 1, location: "Tower B Lift Lobby", text: "Rahul Sharma arrived at Tower B Lift Lobby ⚡" }
         ];
         let microEventIndex = 2; // Start at Golf Course Road Flyover (7 min)
 
@@ -2570,9 +2616,6 @@
                 const timelineTextEl = document.getElementById('rider-micro-event-text');
                 const etaNumEl = document.getElementById('detail-eta-number');
                 const homeEtaEl = document.getElementById('home-rider-eta');
-                const locationEl = document.getElementById('route-current-location');
-                const trackFillEl = document.getElementById('route-track-fill');
-                const markerEl = document.getElementById('route-scooter-marker');
 
                 if (timelineTextEl) {
                     timelineTextEl.style.opacity = '0';
@@ -2584,9 +2627,56 @@
                 }
                 if (etaNumEl) etaNumEl.innerText = ev.eta;
                 if (homeEtaEl) homeEtaEl.innerText = ev.eta;
-                if (locationEl) locationEl.innerText = ev.location;
-                if (trackFillEl) trackFillEl.style.width = `${ev.progress}%`;
-                if (markerEl) markerEl.style.left = `${ev.progress}%`;
+
+                // Update Checkpoint Nodes & Lines
+                const cpDot1 = document.getElementById('cp-dot-1');
+                const cpDot2 = document.getElementById('cp-dot-2');
+                const cpDot3 = document.getElementById('cp-dot-3');
+                const cpLine1 = document.getElementById('cp-line-1');
+                const cpLine2 = document.getElementById('cp-line-2');
+                const cpLabel1 = document.getElementById('cp-label-1');
+                const cpLabel2 = document.getElementById('cp-label-2');
+                const cpLabel3 = document.getElementById('cp-label-3');
+
+                const checkmarkSVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>`;
+                const activeInnerDot = `<div class="cp-active-inner"></div>`;
+
+                if (cpLabel2) cpLabel2.innerText = ev.location;
+
+                if (ev.stage === 0) {
+                    // Early Stage: Dark Store 1 Active
+                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-active"; cpDot1.innerHTML = activeInnerDot; }
+                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-upcoming"; cpDot2.innerHTML = ""; }
+                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
+                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-upcoming";
+                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-upcoming";
+
+                    if (cpLabel1) cpLabel1.className = "checkpoint-label cp-label-active";
+                    if (cpLabel2) cpLabel2.className = "checkpoint-label";
+                    if (cpLabel3) cpLabel3.className = "checkpoint-label";
+                } else if (ev.stage === 1) {
+                    // Mid-Route: Dark Store Completed, Node 2 Active
+                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
+                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-active"; cpDot2.innerHTML = activeInnerDot; }
+                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-upcoming"; cpDot3.innerHTML = ""; }
+                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-filled";
+                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-upcoming";
+
+                    if (cpLabel1) cpLabel1.className = "checkpoint-label";
+                    if (cpLabel2) cpLabel2.className = "checkpoint-label cp-label-active";
+                    if (cpLabel3) cpLabel3.className = "checkpoint-label";
+                } else if (ev.stage === 2) {
+                    // Arrived: Destination Active, Node 1 & 2 Completed
+                    if (cpDot1) { cpDot1.className = "checkpoint-dot cp-completed"; cpDot1.innerHTML = checkmarkSVG; }
+                    if (cpDot2) { cpDot2.className = "checkpoint-dot cp-completed"; cpDot2.innerHTML = checkmarkSVG; }
+                    if (cpDot3) { cpDot3.className = "checkpoint-dot cp-active"; cpDot3.innerHTML = activeInnerDot; }
+                    if (cpLine1) cpLine1.className = "checkpoint-line-segment cp-line-filled";
+                    if (cpLine2) cpLine2.className = "checkpoint-line-segment cp-line-filled";
+
+                    if (cpLabel1) cpLabel1.className = "checkpoint-label";
+                    if (cpLabel2) cpLabel2.className = "checkpoint-label";
+                    if (cpLabel3) cpLabel3.className = "checkpoint-label cp-label-active";
+                }
             }
 
             // Initial render
