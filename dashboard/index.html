@@ -938,44 +938,29 @@
             text-align: right;
         }
 
-        @keyframes scooterDrive {
-            0% { transform: translateX(0px) rotate(0deg); }
-            25% { transform: translateX(3px) rotate(-4deg); }
-            50% { transform: translateX(0px) rotate(0deg); }
-            75% { transform: translateX(-2px) rotate(3deg); }
-            100% { transform: translateX(0px) rotate(0deg); }
+        @keyframes liveDotPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        @keyframes radarPulse {
-            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
-            70% { box-shadow: 0 0 0 14px rgba(249, 115, 22, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
-        }
-
-        @keyframes statusPulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
+        @keyframes markerPulse {
+            0% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 2px 4px rgba(0,0,0,0.15); }
+            50% { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.1), 0 2px 4px rgba(0,0,0,0.15); }
+            100% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 2px 4px rgba(0,0,0,0.15); }
         }
 
         .rider-avatar-large {
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            background: var(--orange-avatar);
+            background: linear-gradient(135deg, var(--zepto-purple-bright), #6D28D9);
             color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
-            animation: radarPulse 2s infinite;
-            position: relative;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
             flex-shrink: 0;
-        }
-
-        .scooter-icon-animated {
-            display: inline-block;
-            animation: scooterDrive 1.5s ease-in-out infinite;
         }
 
         .live-driving-badge {
@@ -984,12 +969,9 @@
             gap: 5px;
             font-size: 0.65rem;
             font-weight: 800;
-            color: #047857;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 2px 8px;
-            border-radius: 99px;
-            margin-top: 4px;
+            color: #059669;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
         }
 
         .live-dot-pulse {
@@ -997,48 +979,70 @@
             height: 6px;
             border-radius: 50%;
             background: #10B981;
-            animation: statusPulse 1.2s infinite ease-in-out;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: liveDotPulse 1.8s infinite;
         }
 
         .rider-route-track-container {
             margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--border-light);
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
             width: 100%;
         }
 
         .route-track-labels {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 0.65rem;
-            font-weight: 700;
             color: var(--text-muted);
             margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .route-stage-label {
+            transition: color 0.3s ease, font-weight 0.3s ease;
+        }
+
+        .route-stage-active {
+            color: var(--zepto-purple-bright) !important;
+            font-weight: 800 !important;
         }
 
         .route-track-bar {
-            height: 6px;
-            background: #EFE9F4;
+            height: 4px;
+            background: #E2E8F0;
             border-radius: 99px;
             position: relative;
-            margin: 0 4px;
+            margin: 6px 2px 2px 2px;
         }
 
         .route-track-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--zepto-purple-bright), var(--green-success));
+            background: var(--zepto-purple-bright);
             border-radius: 99px;
-            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.8s ease-in-out;
         }
 
-        .route-scooter-marker {
+        .route-marker-pin {
             position: absolute;
-            top: -11px;
-            transform: translateX(-50%);
-            font-size: 1.15rem;
-            transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
-            animation: scooterDrive 1.2s ease-in-out infinite;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.8s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .marker-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--zepto-purple-bright);
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25), 0 2px 4px rgba(0,0,0,0.15);
+            animation: markerPulse 2s infinite ease-in-out;
         }
 
         .eta-num {
@@ -1716,7 +1720,11 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="rider-detail-left">
                             <div class="rider-avatar-large">
-                                <span class="scooter-icon-animated">🛵</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="7" cy="17" r="2.5"/>
+                                    <circle cx="17" cy="17" r="2.5"/>
+                                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h2"/>
+                                </svg>
                             </div>
                             <div class="rider-detail-info">
                                 <h4 id="card-rider-name">Rahul Sharma</h4>
@@ -1736,13 +1744,15 @@
                     <!-- Live Route Track Bar -->
                     <div class="rider-route-track-container">
                         <div class="route-track-labels">
-                            <span>Dark Store 1</span>
-                            <span id="route-current-location" style="color: var(--zepto-purple-bright); font-weight: 800;">Golf Course Road Flyover</span>
-                            <span>Tower B 📍</span>
+                            <span class="route-stage-label">Dark Store 1</span>
+                            <span id="route-current-location" class="route-stage-label route-stage-active">Golf Course Road Flyover</span>
+                            <span class="route-stage-label">Tower B 📍</span>
                         </div>
                         <div class="route-track-bar">
                             <div class="route-track-fill" id="route-track-fill" style="width: 65%;"></div>
-                            <div class="route-scooter-marker" id="route-scooter-marker" style="left: 65%;">🛵</div>
+                            <div class="route-marker-pin" id="route-scooter-marker" style="left: 65%;">
+                                <div class="marker-dot"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
