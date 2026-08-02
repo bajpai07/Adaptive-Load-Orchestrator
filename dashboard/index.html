@@ -3544,6 +3544,24 @@
         let enteredPinDigits = [];
         window.activeCheckoutSession = null;
         window.orderHistory = [];
+        window.isProcessingPayment = false;
+
+        function deduplicateOrders(ordersList) {
+            if (!Array.isArray(ordersList)) return [];
+            const seen = new Set();
+            const result = [];
+            for (const order of ordersList) {
+                if (!order) continue;
+                const id = order.orderId || order.id || (order.createdAt ? `ts-${order.createdAt}` : null);
+                if (id) {
+                    if (seen.has(id)) continue;
+                    seen.add(id);
+                }
+                result.push(order);
+            }
+            return result;
+        }
+        window.deduplicateOrders = deduplicateOrders;
 
         async function loadOrderHistory() {
             const sid = getSessionId();
