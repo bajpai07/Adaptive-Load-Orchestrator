@@ -545,6 +545,69 @@ func main() {
 			})
 		})
 
+		// Session-Scoped Order History Endpoints
+		http.HandleFunc("/api/orders/history", func(w http.ResponseWriter, r *http.Request) {
+			sessionID := r.URL.Query().Get("session_id")
+			if sessionID == "" {
+				sessionID = "global"
+			}
+			redisKey := fmt.Sprintf("orders:%s", sessionID)
+			rawOrders, err := rdb.LRange(r.Context(), redisKey, 0, -1).Result()
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode([]interface{}{})
+				return
+			}
+			orders := make([]json.RawMessage, 0, len(rawOrders))
+			for _, oStr := range rawOrders {
+				orders = append(orders, json.RawMessage(oStr))
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(orders)
+		})
+
+		http.HandleFunc("/api/orders/save", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			var req struct {
+				SessionID string          `json:"session_id"`
+				Order     json.RawMessage `json:"order"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if req.SessionID == "" {
+				req.SessionID = "global"
+			}
+			redisKey := fmt.Sprintf("orders:%s", req.SessionID)
+			_ = rdb.LPush(r.Context(), redisKey, string(req.Order)).Err()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		})
+
+		http.HandleFunc("/api/orders/reset", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			var req struct {
+				SessionID string `json:"session_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if req.SessionID != "" {
+				redisKey := fmt.Sprintf("orders:%s", req.SessionID)
+				_ = rdb.Del(r.Context(), redisKey).Err()
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		})
+
 		http.HandleFunc("/op", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, "./dashboard/ops_console.html")
 		})

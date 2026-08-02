@@ -1562,11 +1562,15 @@
         </div>
 
         <!-- Footer / Internal Engineering Link (Subtle) -->
-        <footer style="text-align: center; padding: 24px 16px 12px 16px; opacity: 0.65; font-size: 0.72rem; color: var(--text-muted);">
+        <footer style="text-align: center; padding: 24px 16px 12px 16px; opacity: 0.7; font-size: 0.72rem; color: var(--text-muted);">
             <div>Zepto Group Cart & Trip Orchestrator</div>
-            <div style="margin-top: 4px;">
+            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 12px;">
                 <a href="ops_console.html" target="_blank" style="color: var(--text-muted); text-decoration: underline; font-weight: 500;">
                     ⚙️ Engineering Ops Console
+                </a>
+                <span>•</span>
+                <a href="javascript:void(0)" onclick="resetSession()" style="color: var(--text-muted); text-decoration: underline; font-weight: 500;">
+                    🔄 Reset Session
                 </a>
             </div>
         </footer>
@@ -1940,13 +1944,49 @@
         const wsUrl = protocol + window.location.host + '/ws/groupcart';
         
         let ws;
-        let cartTotalPaise = 0;
-        let hasJoinedTrip = false;
-        let currentTripData = null;
-        let currentCartID = "";
+        function getSessionId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('reset') === 'true') {
+                const oldSid = localStorage.getItem('zepto_session_id');
+                if (oldSid) {
+                    localStorage.removeItem('zepto_order_history_' + oldSid);
+                }
+                localStorage.removeItem('zepto_session_id');
+                localStorage.removeItem('zepto_order_history');
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+            let sid = localStorage.getItem('zepto_session_id');
+            if (!sid) {
+                sid = "user-" + Math.random().toString(36).substring(2, 8);
+                localStorage.setItem('zepto_session_id', sid);
+            }
+            return sid;
+        }
 
+        const currentSessionID = getSessionId();
         const geofenceID = "geofence-aravali";
-        const memberID = "mem-web-304";
+        const memberID = "mem-" + currentSessionID;
+        const stableMemberID = memberID;
+        const stableOrderID = "ord-" + currentSessionID;
+
+        async function resetSession() {
+            const sid = getSessionId();
+            try {
+                await fetch('/api/orders/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid })
+                });
+            } catch (e) {}
+            localStorage.removeItem('zepto_session_id');
+            localStorage.removeItem('zepto_order_history_' + sid);
+            localStorage.removeItem('zepto_order_history');
+            showToast("🔄 Session reset! Generating clean state...", "🔄", 2000);
+            setTimeout(() => {
+                window.location.href = window.location.pathname;
+            }, 800);
+        }
 
         async function ensureCartJoined() {
             if (currentCartID) return currentCartID;
@@ -3006,14 +3046,34 @@
         window.activeCheckoutSession = null;
         window.orderHistory = [];
 
-        function loadOrderHistory() {
+        async function loadOrderHistory() {
+            const sid = getSessionId();
+            const localKey = 'zepto_order_history_' + sid;
             try {
-                const saved = localStorage.getItem('zepto_order_history');
+                const resp = await fetch('/api/orders/history?session_id=' + encodeURIComponent(sid));
+                if (resp.ok) {
+                    const serverOrders = await resp.json();
+                    if (Array.isArray(serverOrders) && serverOrders.length > 0) {
+                        window.orderHistory = serverOrders;
+                        localStorage.setItem(localKey, JSON.stringify(serverOrders));
+                        updateOrderHistoryBadge();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error("Fetch orders from server error:", e);
+            }
+
+            try {
+                const saved = localStorage.getItem(localKey);
                 if (saved) {
                     window.orderHistory = JSON.parse(saved);
+                } else {
+                    window.orderHistory = [];
                 }
-            } catch (e) {}
-            if (!window.orderHistory) window.orderHistory = [];
+            } catch (e) {
+                window.orderHistory = [];
+            }
             updateOrderHistoryBadge();
         }
 
@@ -3243,11 +3303,21 @@
                 const userTotalEl = document.getElementById('user-cart-total');
                 if (userTotalEl) userTotalEl.innerText = "₹0.00";
 
-                // Save Order Snapshot to Order History
+                // Save Order Snapshot to Order History (scoped to session)
                 if (!window.orderHistory) window.orderHistory = [];
                 window.orderHistory.unshift(session);
+                const sid = getSessionId();
+                const localKey = 'zepto_order_history_' + sid;
                 try {
-                    localStorage.setItem('zepto_order_history', JSON.stringify(window.orderHistory));
+                    localStorage.setItem(localKey, JSON.stringify(window.orderHistory));
+                    fetch('/api/orders/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: sid,
+                            order: session
+                        })
+                    }).catch(err => console.error("Save order to backend error:", err));
                 } catch (e) {}
                 updateOrderHistoryBadge();
 
