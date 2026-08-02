@@ -2181,15 +2181,17 @@
             const memberItemSummaries = {};
 
             memberSubtotalsPaise[memberID] = 0;
-            memberSubtotalsPaise["mem-web-304"] = 0;
+            memberSubtotalsPaise["mem-1"] = 0;
+            memberSubtotalsPaise["mem-2"] = 0;
             memberItemSummaries[memberID] = [];
-            memberItemSummaries["mem-web-304"] = [];
+            memberItemSummaries["mem-1"] = [];
+            memberItemSummaries["mem-2"] = [];
 
             // Display-Layer Grouping: Group duplicate product entries per member (ITEM 3)
             const groupedMap = {};
             items.forEach(item => {
                 let adderID = item.added_by_member_id;
-                if (!adderID || adderID === "mem-creator" || adderID === "mem-web-304") {
+                if (!adderID || adderID === "mem-creator" || adderID === "mem-web-304" || adderID === memberID) {
                     adderID = memberID;
                 }
                 
@@ -2218,17 +2220,15 @@
                 const priceFormatted = (totalPricePaise / 100).toFixed(2);
                 const displayName = group.count > 1 ? `${group.name} × ${group.count}` : group.name;
 
-                let adderName = memberNameMap[group.adderID];
-                if (!adderName) {
-                    if (group.adderID === memberID || group.adderID === "mem-web-304") {
-                        adderName = "Person 1 (You)";
-                    } else if (group.adderID === "mem-1") {
-                        adderName = "Person 2 (Aarav Mehta)";
-                    } else if (group.adderID === "mem-2") {
-                        adderName = "Person 3 (Priya Sharma)";
-                    } else {
-                        adderName = `Guest ${group.adderID}`;
-                    }
+                let adderName = "";
+                if (group.adderID === memberID || group.adderID === "mem-web-304" || group.adderID === "mem-creator") {
+                    adderName = "Vikram Kumar (You)";
+                } else if (group.adderID === "mem-1") {
+                    adderName = "Aarav Mehta";
+                } else if (group.adderID === "mem-2") {
+                    adderName = "Priya Sharma";
+                } else {
+                    adderName = memberNameMap[group.adderID] || `Guest (${group.adderID})`;
                 }
 
                 const isOrphaned = window.orphanedMembers && window.orphanedMembers.includes(group.adderID);
@@ -2290,17 +2290,15 @@
             if (subtotalEntries.length > 0) {
                 subtotalEntries.forEach(([mId, subtotalPaise]) => {
                     reconciledSumPaise += subtotalPaise;
-                    let mLabel = memberNameMap[mId];
-                    if (!mLabel) {
-                        if (mId === memberID || mId === "mem-web-304") {
-                            mLabel = "Person 1 (You)";
-                        } else if (mId === "mem-1") {
-                            mLabel = "Person 2 (Aarav Mehta)";
-                        } else if (mId === "mem-2") {
-                            mLabel = "Person 3 (Priya Sharma)";
-                        } else {
-                            mLabel = `Guest (${mId})`;
-                        }
+                    let mLabel = "";
+                    if (mId === memberID || mId === "mem-web-304" || mId === "mem-creator") {
+                        mLabel = 'Vikram Kumar (Flat 304) <span style="background: var(--zepto-purple-light); color: var(--zepto-purple-bright); padding: 1px 6px; border-radius: 99px; font-size: 0.68rem; font-weight: 800; margin-left: 4px;">(You)</span>';
+                    } else if (mId === "mem-1") {
+                        mLabel = "Aarav Mehta";
+                    } else if (mId === "mem-2") {
+                        mLabel = "Priya Sharma";
+                    } else {
+                        mLabel = memberNameMap[mId] || `Guest (${mId})`;
                     }
                     const row = document.createElement('div');
                     row.style.cssText = "display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--text-dark); padding: 4px 0; border-bottom: 1px dashed var(--border-light);";
